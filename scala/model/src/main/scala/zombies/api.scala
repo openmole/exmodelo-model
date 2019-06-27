@@ -191,6 +191,7 @@ trait DSL {
   def RedCross(
     size: Int,
     exhaustionProbability: Option[Double] = None,
+    perception: Double = physic.humanPerception,
     followProbability: Double = 0.0,
     informProbability: Double = physic.humanInformProbability,
     aggressive: Boolean = true,

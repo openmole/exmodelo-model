@@ -115,6 +115,7 @@ object parameters {
 
 
   val redCrossSize = Range("redCrossSize", RangeValue(0, 50, 1, 10, 0), Variable)
+  val redCrossPerception = Range("redCrossPerception", RangeValue(0.0, 5.0, 0.01, physic.humanPerception, 0.0), Variable)
   val redCrossExhaustionProbability = Range("redCrossExhaustionProbability", RangeValue(0.0, 1.0, 0.01, physic.humanExhaustionProbability, 0.0), Variable)
   val redCrossExhaustionMechanism = OnOff("redCrossExhaustion", false, Variable, Seq(redCrossExhaustionProbability.name))
   val redCrossFollowProbability = Range("redCrossFollowProbability", RangeValue(0.0, 1.0, 0.01, physic.humanFollowProbability, 0.0), Variable)
@@ -129,7 +130,7 @@ object parameters {
     } :+ armyAggressive.name)
 
   val redCrossOnOff = OnOff("red cross", false, Variable,
-    Seq(redCrossSize, redCrossFollowProbability, redCrossInformProbability, activationDelay, efficiencyProbability).map {
+    Seq(redCrossSize,redCrossPerception, redCrossFollowProbability, redCrossInformProbability, activationDelay, efficiencyProbability).map {
       _.name
     } ++ Seq(redCrossAggressive.name, redCrossExhaustionMechanism.name))
 

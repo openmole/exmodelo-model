@@ -72,6 +72,7 @@ object simulation {
   case class RedCross(
     size: Int,
     exhaustionProbability: Option[Double] = None,
+    perception: Double = physic.humanPerception,
     followProbability: Double = 0.0,
     informProbability: Double = physic.humanInformProbability,
     aggressive: Boolean = true,
@@ -167,7 +168,7 @@ object simulation {
           walkSpeed = walkSpeed * cellSide,
           runSpeed = humanRunSpeed * cellSide,
           exhaustionProbability = humanExhaustionProbability,
-          perception = humanPerception * cellSide,
+          perception = redCross.perception * cellSide,
           maxRotation = humanMaxRotation,
           followRunningProbability = redCross.followProbability,
           fight = Fight(humanFightBackProbability, aggressive = redCross.aggressive),

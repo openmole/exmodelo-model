@@ -48,6 +48,7 @@ object simulate {
         case _ => RedCross(
           value(redCrossSize),
           scalaOptionValue(redCrossExhaustionMechanism, redCrossExhaustionProbability).map{_.asInstanceOf[Double]},
+          value(redCrossPerception),
           value(redCrossFollowProbability),
           value(redCrossInformProbability),
           booleanValue(redCrossAggressive),

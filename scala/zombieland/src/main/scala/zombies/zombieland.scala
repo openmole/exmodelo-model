@@ -40,6 +40,7 @@ object zombieland {
 
       redCrossOnOff,
       redCrossSize,
+      redCrossPerception,
       redCrossExhaustionMechanism,
       redCrossExhaustionProbability,
       redCrossFollowProbability,
