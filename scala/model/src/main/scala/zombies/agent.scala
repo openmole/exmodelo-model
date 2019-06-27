@@ -207,7 +207,7 @@ object agent {
       (newAgents.toVector, rescued.toVector)
     }
 
-    def joining(world: World, simulation: Simulation, random: Random) = {
+    def joining(world: World, simulation: Simulation, agents: Seq[Agent], random: Random) = {
 
       val join =
         for {
@@ -215,39 +215,46 @@ object agent {
           y <- 0 until world.side
           c = world.cells(x)(y)
         } yield c match {
-          case c: Floor if c.humanEntranceLambda.isDefined =>
-            val poisson = {
-              val L = Math.exp(-c.humanEntranceLambda.get)
-              var p = 1.0
-              var k = 0
+          case c: Floor =>
+            c.entrance match {
+              case PoissonEntrance(lambda) =>
+                val demographicFactor =
+                  if(simulation.demographicEntrances) agents.collect(Agent.human).size.toDouble
+                  else 1.0
 
-              do {
-                k += 1
-                p *= random.nextDouble()
-              } while ( p > L )
+                val poisson = {
+                  val L = Math.exp(-lambda * demographicFactor)
+                  var p = 1.0
+                  var k = 0
 
-              k - 1
+                  do {
+                    k += 1
+                    p *= random.nextDouble()
+                  } while ( p > L )
+
+                  k - 1
+                }
+
+                val informed = random.nextDouble() < simulation.humanInformedRatio
+                val rescue = Rescue(informed = informed, informProbability = simulation.humanInformProbability)
+
+                def human = Human.apply(
+                  world,
+                  walkSpeed = simulation.walkSpeed,
+                  runSpeed = simulation.humanRunSpeed ,
+                  exhaustionProbability = simulation.humanExhaustionProbability,
+                  perception = simulation.humanPerception,
+                  maxRotation = simulation.humanMaxRotation,
+                  followRunningProbability = simulation.humanFollowProbability,
+                  fight = Fight(simulation.humanFightBackProbability),
+                  rescue = rescue,
+                  canLeave = true,
+                  function = Human.Civilian,
+                  rng = random).copy(position = World.cellCenter(world, (x, y)))
+
+                (0 until poisson).map(_ => human)
+              case _ => Seq()
             }
-
-
-            val informed = random.nextDouble() < simulation.humanInformedRatio
-            val rescue = Rescue(informed = informed, informProbability = simulation.humanInformProbability)
-
-            def human = Human.apply(
-              world,
-              walkSpeed = simulation.walkSpeed,
-              runSpeed = simulation.humanRunSpeed ,
-              exhaustionProbability = simulation.humanExhaustionProbability,
-              perception = simulation.humanPerception,
-              maxRotation = simulation.humanMaxRotation,
-              followRunningProbability = simulation.humanFollowProbability,
-              fight = Fight(simulation.humanFightBackProbability),
-              rescue = rescue,
-              canLeave = true,
-              function = Human.Civilian,
-              rng = random).copy(position = World.cellCenter(world, (x, y)))
-
-            (0 until poisson).map(_ => human)
           case _ => Seq()
         }
 
