@@ -1,0 +1,16 @@
+output,humanFollowProbability,humanInformedRatio,humanInformProbability
+peakTime,1096.809,1100.5402,1095.7658
+output,humanFollowProbability,humanInformedRatio,humanInformProbability
+peakSize,70.3542,70.3932,70.5852
+output,humanFollowProbability,humanInformedRatio,humanInformProbability
+totalZombified,786.5552,785.1608,798.1028
+output,humanFollowProbability,humanInformedRatio,humanInformProbability
+halfZombified,756.8148,756.6786,760.9052
+output,humanFollowProbability,humanInformedRatio,humanInformProbability
+spatialMoranZombified,0.23417492105946128,0.23413374348721053,0.23412598718817368
+output,humanFollowProbability,humanInformedRatio,humanInformProbability
+spatialDistanceMeanZombified,1.7727958614921817,1.7667405182681168,1.772550871046193
+output,humanFollowProbability,humanInformedRatio,humanInformProbability
+spatialEntropyZombified,1.111397934641467,1.109739779225108,1.1230952396639948
+output,humanFollowProbability,humanInformedRatio,humanInformProbability
+spatialSlopeZombified,1.8197677355077386,NaN,1.8282097644378954

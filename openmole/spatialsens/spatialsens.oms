@@ -27,19 +27,13 @@ val percolationLinkWidth = Val[Double]
 // outputs
 val humansDynamic = Val[Array[Int]]
 val zombiesDynamic = Val[Array[Int]]
-val killedDynamic = Val[Array[Int]]
 val zombifiedDynamic = Val[Array[Int]]
-val goneDynamic = Val[Array[Int]]
-val fleeDynamic = Val[Array[Int]]
-val pursueDynamic = Val[Array[Int]]
-val rescuedDynamic = Val[Array[Int]]
 
 // morphological indicators
 val moran = Val[Double]
 val avgDistance = Val[Double]
 val density = Val[Double]
 val components = Val[Double]
-//val avgDetour = Val[Double] // not computed - no graph lib
 val avgBlockArea = Val[Double]
 val avgComponentArea = Val[Double]
 val fullDilationSteps = Val[Double]
@@ -73,7 +67,7 @@ val model =
         ).getGrid(rng),worldSize)
     })
 
-    val (_,_,_,moran,avgDistance,density,components,_,avgBlockArea,avgComponentArea,fullDilationSteps,fullErosionSteps) = Morphology(world).toTuple
+    //val (_,_,_,moran,avgDistance,density,components,_,avgBlockArea,avgComponentArea,fullDilationSteps,fullErosionSteps) = Morphology(world).toTuple
 
     val result = zombieInvasion(
       world = world,
@@ -83,15 +77,16 @@ val model =
       random = rng
     )
 
-    val humansDynamic = result.humansDynamic(20)
-    val zombiesDynamic = result.zombiesDynamic(20)
-    val rescuedDynamic = result.rescuedDynamic(20)
+    val humansDynamic = result.humansDynamic(10)
+    val zombiesDynamic = result.zombiesDynamic(10)
+    val zombifiedDynamic = result.zombifiedDynamic(10)
+    
   """) set (
     (inputs,outputs) += (replication,id),//,humans,zombies
     (inputs,outputs) += (generatorType,worldSize,randomDensity,expMixtureCenters,expMixtureRadius,expMixtureThreshold,
       blocksNumber,blocksMinSize,blocksMaxSize,percolationProba,percolationBordPoints,percolationLinkWidth),
-    outputs += (humansDynamic, zombiesDynamic, rescuedDynamic),
-    outputs += (moran,avgDistance,density,components,avgBlockArea,avgComponentArea,fullDilationSteps,fullErosionSteps),
+    outputs += (humansDynamic, zombiesDynamic, zombifiedDynamic),
+    //outputs += (moran,avgDistance,density,components,avgBlockArea,avgComponentArea,fullDilationSteps,fullErosionSteps),
     plugins += pluginsOf[zombies.agent.Agent]
   )
 
@@ -99,14 +94,17 @@ val model =
 val purpose = "LHS_SPATIALSENS_REPLICATIONS_GRID"
 //val purpose = "TEST"
 
-val env = EGIEnvironment("vo.complex-systems.eu")
+//val env = EGIEnvironment("vo.complex-systems.eu")
 //val env = LocalEnvironment(10)
+val env = SLURMEnvironment("jraimb01","myria.criann.fr",
+    queue = "2tcourt",workDirectory = "/tmp",nTasks = 1,memory = 3 gigabytes,wallTime = 20 minutes)//,reservation="exmodelo0624")
+
 
 val indics_hook = CSVHook((workDirectory / "exploration" / (((new java.text.SimpleDateFormat("yyyyMMdd_HHmmss")).format(new java.util.Date()))+"_"+purpose+".csv")),arrayOnRow = true)
 
 
 val exploration = DirectSampling(
-    evaluation = (model on env by 100 hook indics_hook),
+    evaluation = (model on env by 50 hook indics_hook),
     //evaluation = (model hook indics_hook),
     sampling = ((((LHS(100,
           randomDensity in Range(0.0,1.0),
@@ -117,7 +115,7 @@ val exploration = DirectSampling(
           blocksMinSize in Range(1.0,10.0),
           blocksMaxSize in Range(2.0,30.0),
           percolationProba in Range(0.1,1.0),
-          percolationBordPoints in Range(1.0,30.0),
+          percolationBordPoints in Range(1.0,20.0),
           percolationLinkWidth in Range(1.0,5.0)
         )
         withIndex id)
