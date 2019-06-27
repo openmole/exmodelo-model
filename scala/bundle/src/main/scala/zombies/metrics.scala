@@ -75,12 +75,9 @@ object metrics {
     val (simulation, events) = results
     val cellSide = space.cellSide(simulation.head.world.side)
     def filter(h: agent.Human) = {
-      val f =
-        for {
-          r <- runSpeed.map(f => f(h.metabolism.runSpeed / cellSide))
-          i <- informProbability.map(f => f(h.rescue.informProbability))
-        } yield r && i
-      f.getOrElse(true)
+      val r = runSpeed.map(f => f(h.metabolism.runSpeed / cellSide)).getOrElse(true)
+      val i = informProbability.map(f => f(h.rescue.informProbability)).getOrElse(true)
+      r && i
     }
 
     Array(events.head.collect(Event.rescued).filter(e => filter(e.human)).size) ++

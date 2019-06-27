@@ -14,7 +14,7 @@ package object zombies extends DSL {
     def walkingZombiesDynamic(by: Int = defaultGroupSize) = metrics.walkingZombiesDynamic(results, by)
     def runningZombiesDynamic(by: Int = defaultGroupSize) = metrics.runningZombiesDynamic(results, by)
     def rescuedDynamic(by: Int = defaultGroupSize) = metrics.rescuedDynamic(results, by)
-    def filteredRescuedDynamic(runSpeed: Option[Double => Boolean], informProbability: Option[Double => Boolean], by: Int = defaultGroupSize) =
+    def filteredRescuedDynamic(runSpeed: Option[Double => Boolean] = None, informProbability: Option[Double => Boolean] = None, by: Int = defaultGroupSize) =
       metrics.filteredRescuedDynamic(results, runSpeed, informProbability, by)
 
     def killedDynamic(by: Int = defaultGroupSize) = metrics.killedDynamic(results, by)
@@ -41,5 +41,6 @@ package object zombies extends DSL {
     def spatialSlopeZombified: Double = metrics.spatialSlope(metrics.zombified)(results)
     def spatialRipleyZombified: Double = metrics.spatialRipley(metrics.zombified)(results)
   }
+
 
 }
