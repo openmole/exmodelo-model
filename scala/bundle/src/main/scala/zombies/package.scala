@@ -14,14 +14,17 @@ package object zombies extends DSL {
     def walkingZombiesDynamic(by: Int = defaultGroupSize) = metrics.walkingZombiesDynamic(results, by)
     def runningZombiesDynamic(by: Int = defaultGroupSize) = metrics.runningZombiesDynamic(results, by)
     def rescuedDynamic(by: Int = defaultGroupSize) = metrics.rescuedDynamic(results, by)
+    def filteredRescuedDynamic(runSpeed: Option[Double => Boolean], informProbability: Option[Double => Boolean], by: Int = defaultGroupSize) =
+      metrics.filteredRescuedDynamic(results, runSpeed, informProbability, by)
+
     def killedDynamic(by: Int = defaultGroupSize) = metrics.killedDynamic(results, by)
     def zombifiedDynamic(by: Int = defaultGroupSize) = metrics.zombifiedDynamic(results, by)
     def fleeDynamic(by: Int = defaultGroupSize) = metrics.fleeDynamic(results, by)
     def pursueDynamic(by: Int = defaultGroupSize) = metrics.pursueDynamic(results, by)
     def humansGoneDynamic(by: Int = defaultGroupSize) = metrics.humansGoneDynamic(results, by)
     def zombiesGoneDynamic(by: Int = defaultGroupSize) = metrics.zombiesGoneDynamic(results, by)
-
     def totalRescued = metrics.totalRescued(results)
+
     def halfTimeRescued = metrics.halfTimeRescued(results)
     def peakTimeRescued(window: Int = defaultGroupSize) = metrics.peakTimeRescued(results, window)
     def peakSizeRescued(window: Int = defaultGroupSize) = metrics.peakSizeRescued(results, window)

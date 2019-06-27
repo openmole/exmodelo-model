@@ -36,7 +36,8 @@ trait DSL {
   def zombieInvasion(
     world: World = quarantine,
     infectionRange: Double = physic.infectionRange,
-    demographicEntrances: Boolean = false,
+    demographicEntranceRate: Boolean = false,
+    entranceLambda: Double = physic.entranceLambda,
     humanRunSpeed: Double = physic.humanRunSpeed,
     humanPerception: Double = physic.humanPerception,
     humanMaxRotation: Double = physic.humanMaxRotation,
@@ -63,7 +64,7 @@ trait DSL {
     val state = initialize(
       world = world,
       infectionRange = infectionRange,
-      demographicEntrances = demographicEntrances,
+      demographicEntranceRate = demographicEntranceRate,
       humanRunSpeed = humanRunSpeed,
       humanPerception = humanPerception,
       humanMaxRotation = humanMaxRotation,
@@ -92,7 +93,8 @@ trait DSL {
   def initialize(
     world: World = quarantine,
     infectionRange: Double = physic.infectionRange,
-    demographicEntrances: Boolean = false,
+    demographicEntranceRate: Boolean = false,
+    entranceLambda: Double = physic.entranceLambda,
     humanRunSpeed: Double = physic.humanRunSpeed,
     humanPerception: Double = physic.humanPerception,
     humanMaxRotation: Double = physic.humanMaxRotation,
@@ -141,7 +143,8 @@ trait DSL {
     Simulation.initialize(
       world = world,
       infectionRange = infectionRange,
-      demographicEntrances = demographicEntrances,
+      demographicEntranceRate = demographicEntranceRate,
+      entranceLambda = entranceLambda,
       humanRunSpeed = humanRunSpeed,
       humanPerception = humanPerception,
       humanMaxRotation = humanMaxRotation,

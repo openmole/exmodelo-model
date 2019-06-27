@@ -35,7 +35,7 @@ object world {
 
   sealed trait Entrance
   case object NoEntrance extends Entrance
-  case class PoissonEntrance(lambda: Double) extends Entrance
+  case object HumanEntrance extends Entrance
 
   object World {
     def floor: PartialFunction[Cell, Floor] = {
@@ -62,7 +62,7 @@ object world {
           case '+' => Some(Wall)
           case 'R' => Some(Floor(rescueZone = true))
           case 'E' => Some(Floor(rescueZone = true, information = 1.0))
-          case 'e' => Some(Floor(entrance = PoissonEntrance(lambda = 0.1)))
+          case 'e' => Some(Floor(entrance = HumanEntrance))
           case 'T' => Some(Floor(trap = Some(CaptureTrap)))
           case 'D' => Some(Floor(trap = Some(DeathTrap)))
           case _ => None

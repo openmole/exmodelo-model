@@ -71,6 +71,21 @@ object metrics {
   }
 
   def rescuedDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.rescued)
+  def filteredRescuedDynamic(results: SimulationResult, runSpeed: Option[Double => Boolean], informProbability: Option[Double => Boolean], by: Int = defaultGroupSize) = {
+    val (simulation, events) = results
+    val cellSide = space.cellSide(simulation.head.world.side)
+    def filter(h: agent.Human) = {
+      val f =
+        for {
+          r <- runSpeed.map(f => f(h.metabolism.runSpeed / cellSide))
+          i <- informProbability.map(f => f(h.rescue.informProbability))
+        } yield r && i
+      f.getOrElse(true)
+    }
+
+    Array(events.head.collect(Event.rescued).filter(e => filter(e.human)).size) ++
+      events.tail.map(_.collect(Event.rescued).filter(e => filter(e.human)).size).grouped(by).map(_.sum)
+  }
   def killedDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.killed)
   def zombifiedDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.zombified)
   def fleeDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.flee)
@@ -79,6 +94,19 @@ object metrics {
   def zombiesGoneDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.zombieGone)
 
   def totalRescued(results: SimulationResult) = totalEvents(results, Event.rescued)
+
+//  def filteredTotalRescued(results: SimulationResult, runSpeed: Option[Double => Boolean], informProbability: Option[Double => Boolean]) = {
+//    val (simulation, events) = results
+//    val cellSide = space.cellSide(simulation.head.world.side)
+//    def filter(h: agent.Human) =
+//      for {
+//        r <- runSpeed.map(f => f(h.metabolism.runSpeed / cellSide))
+//        i <- informProbability.map(f => f(h))
+//      } yield r && i
+//
+//    events.map(_.collect(Event.rescued).filter(e => filter(e.human).getOrElse(true)).size).sum
+//  }
+
   def halfTimeRescued(results: SimulationResult) = halfTimeEvents(results, Event.rescued)
   def peakTimeRescued(results: SimulationResult, window: Int = defaultGroupSize) = peakTimeEvents(results, window, Event.rescued)
   def peakSizeRescued(results: SimulationResult, window: Int = defaultGroupSize) = peakSizeEvents(results, window, Event.rescued)

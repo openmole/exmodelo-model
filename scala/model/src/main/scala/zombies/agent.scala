@@ -217,13 +217,13 @@ object agent {
         } yield c match {
           case c: Floor =>
             c.entrance match {
-              case PoissonEntrance(lambda) =>
+              case HumanEntrance =>
                 val demographicFactor =
-                  if(simulation.demographicEntrances) agents.collect(Agent.human).size.toDouble
+                  if(simulation.demographicEntranceRate) agents.collect(Agent.human).size.toDouble
                   else 1.0
 
                 val poisson = {
-                  val L = Math.exp(-lambda * demographicFactor)
+                  val L = Math.exp(-simulation.entranceLambda * demographicFactor)
                   var p = 1.0
                   var k = 0
 
