@@ -9,6 +9,10 @@ package object zombies extends DSL {
     def humansDynamic(by: Int = defaultGroupSize) = metrics.humansDynamic(results, by)
     def walkingHumansDynamic(by: Int = defaultGroupSize) = metrics.walkingHumansDynamic(results, by)
     def runningHumansDynamic(by: Int = defaultGroupSize) = metrics.runningHumansDynamic(results, by)
+    def uninformedHumansDynamic(by: Int = defaultGroupSize) = metrics.uninformedHumansDynamic(results, by)
+    def informedHumansDynamic(by: Int = defaultGroupSize) = metrics.informedHumansDynamic(results, by)
+    def unalertedHumansDynamic(by: Int = defaultGroupSize) = metrics.unalertedHumansDynamic(results, by)
+    def alertedHumansDynamic(by: Int = defaultGroupSize) = metrics.alertedHumansDynamic(results, by)
 
     def zombiesDynamic(by: Int = defaultGroupSize) = metrics.zombiesDynamic(results, by)
     def walkingZombiesDynamic(by: Int = defaultGroupSize) = metrics.walkingZombiesDynamic(results, by)
