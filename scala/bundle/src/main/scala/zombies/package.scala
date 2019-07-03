@@ -20,6 +20,7 @@ package object zombies extends DSL {
     def rescuedDynamic(by: Int = defaultGroupSize) = metrics.rescuedDynamic(results, by)
     def filteredRescuedDynamic(runSpeed: Option[Double => Boolean] = None, informProbability: Option[Double => Boolean] = None, by: Int = defaultGroupSize) =
       metrics.filteredRescuedDynamic(results, runSpeed, informProbability, by)
+    def accumulatedRescuedDynamic(by: Int = defaultGroupSize) = metrics.accumulatedRescuedDynamic(results, by)
 
     def killedDynamic(by: Int = defaultGroupSize) = metrics.killedDynamic(results, by)
     def zombifiedDynamic(by: Int = defaultGroupSize) = metrics.zombifiedDynamic(results, by)

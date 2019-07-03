@@ -107,6 +107,7 @@ object metrics {
   def humansGoneDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.humanGone)
   def zombiesGoneDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.zombieGone)
 
+  def accumulatedRescuedDynamic(results: SimulationResult, by: Int = defaultGroupSize) = accumulatedEventDynamic(results, Event.rescued)
   def totalRescued(results: SimulationResult) = totalEvents(results, Event.rescued)
 
 //  def filteredTotalRescued(results: SimulationResult, runSpeed: Option[Double => Boolean], informProbability: Option[Double => Boolean]) = {
@@ -138,6 +139,11 @@ object metrics {
   private def eventDynamic(results: SimulationResult, by: Int, e: PartialFunction[Event, Any]) = {
     val (_, events) = results
     Array(events.head.collect(e).size) ++ events.tail.map(_.collect(e).size).grouped(by).map(_.sum)
+  }
+
+  private def accumulatedEventDynamic(results: SimulationResult, e: PartialFunction[Event, Any]) = {
+    val (_, events) = results
+    cumSum(events.map(_.collect(e)).map(_.size)).toArray
   }
 
   private def totalEvents(results: SimulationResult, e: PartialFunction[Event, Any]) = {
