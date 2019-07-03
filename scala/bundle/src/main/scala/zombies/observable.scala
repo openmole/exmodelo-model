@@ -52,10 +52,27 @@ object observable {
     def walking = Agent.human.andThenPartial { case h if !Metabolism.isRunning(h.metabolism) => h }
     agentsDynamic(results, by, walking)
   }
-
   def runningHumansDynamic(results: SimulationResult, by: Int = defaultGroupSize) = {
     def running = Agent.human.andThenPartial { case h if Metabolism.isRunning(h.metabolism) => h }
     agentsDynamic(results, by, running)
+  }
+
+  def uninformedHumansDynamic(results: SimulationResult, by: Int = defaultGroupSize) = {
+    def uninformed = Agent.human.andThenPartial { case h if !agent.Human.isInformed(h) => h }
+    agentsDynamic(results, by, uninformed)
+  }
+  def informedHumansDynamic(results: SimulationResult, by: Int = defaultGroupSize) = {
+    def informed = Agent.human.andThenPartial { case h if agent.Human.isInformed(h) => h }
+    agentsDynamic(results, by, informed)
+  }
+
+  def unalertedHumansDynamic(results: SimulationResult, by: Int = defaultGroupSize) = {
+    def unalerted = Agent.human.andThenPartial { case h if !agent.Human.isAlerted(h) => h }
+    agentsDynamic(results, by, unalerted)
+  }
+  def alertedHumansDynamic(results: SimulationResult, by: Int = defaultGroupSize) = {
+    def alerted = Agent.human.andThenPartial { case h if agent.Human.isAlerted(h) => h }
+    agentsDynamic(results, by, alerted)
   }
 
   def zombiesDynamic(results: SimulationResult, by: Int = defaultGroupSize) = agentsDynamic(results, by, Agent.zombie)
