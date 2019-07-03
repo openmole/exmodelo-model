@@ -37,9 +37,11 @@ plot_dynamics <- allData %>%
     geom_line() +
     xlab("time step") +
     scale_color_discrete(name = "Mechanisms") +
-    facet_grid(species ~ speed) +
+    facet_grid(speed ~ species) +
     theme_bw()
 plot_dynamics
+
+ggsave("~/Documents/OpenMOLE/ExModelo/courses/ODE/presentation/figures/ABMdynamics.png", plot_dynamics, width = 15, units = "cm")
 
 
 source("fitness.R")
