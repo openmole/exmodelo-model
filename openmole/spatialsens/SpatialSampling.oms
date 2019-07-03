@@ -1,0 +1,56 @@
+val p1gen = Val[Double]
+val p2gen = Val[Double]
+val p3gen = Val[Double]
+
+val id = Val[Int]
+
+val w = Val[Array[Array[Double]]]
+
+val x = Val[Array[Double]]
+val y = Val[Array[Double]]
+val v = Val[Array[Double]]
+
+/*
+val model = ScalaTask(
+    """
+    val rawvals = w.zipWithIndex.map{case (row,i) => row.zipWithIndex.map{case (c,j)=> (c,i.toDouble,j.toDouble)}}.flatten
+    val v = rawvals.map{_._1}
+    val x = rawvals.map{_._2}
+    val y = rawvals.map{_._3}
+    """
+    ) set (
+  inputs += (w),
+  (inputs,outputs) += (p1gen,p2gen,p3gen,id),
+  outputs += (v,x,y)
+)*/
+
+DirectSampling(
+    evaluation = EmptyTask(),//model hook (workDirectory / "grids.csv"),
+    sampling = 
+    BlocksGridSpatialSampling(
+        samples = 2,
+        gridSize = 10,
+        blocks = (p1gen in Range(1.0,10.0)),
+        blockMinSize = (p2gen in Range(2.0,4.0)),
+        blockMaxSize = (p3gen in Range(2.0,4.0)),
+        prototype = w
+    )
+    zipWithIndex id
+) hook MatrixHook(workDirectory / "gridsMat.csv",w)
+
+/*  PercolationGridSpatialSampling(samples =10,gridSize = worldSize,
+    percolationProba = p1gen in Range(0.3,1.0),
+    bordPoints = p2gen in Range(1.0,20.0),
+    linkwidth = p3gen in Range(1.0,5.0),
+    genworld
+  )
+  
+  ExpMixtureThresholdSpatialSampling(samples =10,gridSize =worldSize,
+    centers = p1gen in Range(1.0,10.0),
+    kernelRadius = p2gen in Range(1.0,20.0),
+    threshold = p3gen in Range(0.0,1.0),
+    prototype = genworld
+  )
+  */
+  
+  

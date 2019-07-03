@@ -33,7 +33,7 @@ object cooperation {
       armyFollowProbability,
       armyMaxRotation,
       armyInformProbability,
-      armyAgressive
+      armyAggressive
     )
   }
 }

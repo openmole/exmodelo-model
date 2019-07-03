@@ -36,7 +36,7 @@ object zombieland {
       armyFollowProbability,
       armyMaxRotation,
       armyInformProbability,
-      armyAgressive,
+      armyAggressive,
 
       redCrossOnOff,
       redCrossSize,
@@ -44,7 +44,7 @@ object zombieland {
       redCrossExhaustionProbability,
       redCrossFollowProbability,
       redCrossInformProbability,
-      redCrossAgressive,
+      redCrossAggressive,
       activationDelay,
       efficiencyProbability
     )

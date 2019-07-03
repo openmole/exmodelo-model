@@ -12,7 +12,7 @@ import scala.scalajs.js.annotation._
 import scala.util.Random
 import scaladget.bootstrapnative.bsn._
 import zombies.simulation.{Event, RedCross, Simulation}
-import zombies.world.{CaptureTrap, DeathTrap, Floor, NeighborhoodCache, Wall, World}
+import zombies.world.{CaptureTrap, DeathTrap, Floor, NeighborhoodCache, NoEntrance, Wall, World}
 import rx._
 import scaladget.svg.path._
 import scaladget.tools._
@@ -135,9 +135,9 @@ object display {
       world.cells(lineIndex).map {
         case Wall => Some(Color.wall)
         case f: Floor =>
-          (f.rescueZone, f.humanEntranceLambda, f.trap) match {
+          (f.rescueZone, f.entrance == NoEntrance, f.trap) match {
             case (true, _, _) => Some(Color.rescue)
-            case (_, Some(_), _ )=> Some(Color.entrance)
+            case (_, false, _ )=> Some(Color.entrance)
             case (_, _, Some(CaptureTrap)) => Some(Color.captureTrap)
             case (_, _, Some(DeathTrap)) => Some(Color.deathTrap)
             case _ => None

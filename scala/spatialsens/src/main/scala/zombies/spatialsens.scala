@@ -20,7 +20,7 @@ object spatialsens {
 
     val worldsize = 40
 
-    World(
+    closeWorld(World(
       GridGeneratorLauncher(
         optionValue(generationMethod),
         worldsize,
@@ -36,7 +36,7 @@ object spatialsens {
         value(percolationLinkWidth)
       ).getGrid(rng),
       worldsize
-    )
+    ))
   }
 
 

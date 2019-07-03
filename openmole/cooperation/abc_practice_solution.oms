@@ -1,0 +1,65 @@
+import zombies._
+
+
+// Model inputs
+val humanFollowProbability = Val[Double]
+val humanInformedRatio = Val[Double]
+val humanInformProbability = Val[Double]
+
+// Model outputs
+val rescuedDynamic = Val[Array[Int]]
+
+val rescuedDynamicWindow = Val[Int]
+val seed = Val[Long]
+
+val model =
+  ScalaTask("""
+    import zombies._
+    
+    val rng = Random(seed)
+  
+    val result = zombieInvasion(
+      humanFollowProbability = humanFollowProbability,
+      humanInformedRatio = humanInformedRatio,
+      humanInformProbability = humanInformProbability,
+      zombies = 4,
+      humans = 250,
+      steps = 500,
+      random = rng)
+    
+    val rescuedDynamic = result.rescuedDynamic(by=rescuedDynamicWindow)
+  """) set (
+    inputs += (seed, humanFollowProbability, humanInformedRatio, humanInformProbability),
+    outputs += (rescuedDynamic),
+    
+    seed := 42L,
+    humanInformedRatio := physic.humanInformedRatio,
+    humanInformProbability := physic.humanInformProbability,
+    humanFollowProbability := physic.humanFollowProbability,
+    rescuedDynamicWindow := 20,
+    plugins += pluginsOf[zombies.agent.Agent]    
+  )
+ 
+// Adapt this to the number of jobs you want to run simultaneously.
+val parJobs = 4
+
+val abc =
+  IslandABC(
+    evaluation = model set (rescuedDynamicWindow := 20),
+    prior = Seq(
+      humanInformedRatio in (0.0, 1.0),
+      humanInformProbability in (0.0, 1.0),
+      humanFollowProbability in (0.0, 1.0)),
+    observed =  Seq(rescuedDynamic -> Array(0,5,14,42,36,9,5,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)),
+    sample = 1000,
+    generated = 100,
+    minAcceptedRatio = 0.01,
+    stopSampleSizeFactor = 5,
+    parallelism = parJobs
+  )
+
+val save = ABCHook(abc, workDirectory / "results/abc/rescuedDynamic/")
+
+val env = LocalEnvironment(parJobs)
+
+abc hook save on env

@@ -39,7 +39,7 @@ object simulate {
           value(armyFollowProbability),
           value(armyMaxRotation),
           value(armyInformProbability),
-          aggressive = booleanValue(armyAgressive)
+          aggressive = booleanValue(armyAggressive)
         )
       }
 
@@ -50,7 +50,7 @@ object simulate {
           scalaOptionValue(redCrossExhaustionMechanism, redCrossExhaustionProbability).map{_.asInstanceOf[Double]},
           value(redCrossFollowProbability),
           value(redCrossInformProbability),
-          booleanValue(redCrossAgressive),
+          booleanValue(redCrossAggressive),
           value(activationDelay),
           value(efficiencyProbability)
         )

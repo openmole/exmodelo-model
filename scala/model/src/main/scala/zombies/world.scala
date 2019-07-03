@@ -20,7 +20,7 @@ object world {
     trap: Option[Trap] = None,
     information: Double = 0.0,
     pheromone: Double = 0.0,
-    humanEntranceLambda: Option[Double] = None) extends Cell
+    entrance: Entrance = NoEntrance) extends Cell
 
   sealed trait Trap
   case object CaptureTrap extends Trap
@@ -31,6 +31,11 @@ object world {
   object Floor {
     def trapZone(f: Floor) = f.trap.isDefined
   }
+
+
+  sealed trait Entrance
+  case object NoEntrance extends Entrance
+  case object HumanEntrance extends Entrance
 
   object World {
     def floor: PartialFunction[Cell, Floor] = {
@@ -57,7 +62,7 @@ object world {
           case '+' => Some(Wall)
           case 'R' => Some(Floor(rescueZone = true))
           case 'E' => Some(Floor(rescueZone = true, information = 1.0))
-          case 'e' => Some(Floor(humanEntranceLambda = Some(0.1)))
+          case 'e' => Some(Floor(entrance = HumanEntrance))
           case 'T' => Some(Floor(trap = Some(CaptureTrap)))
           case 'D' => Some(Floor(trap = Some(DeathTrap)))
           case _ => None

@@ -1,11 +1,11 @@
-import _root_.zombies.simulation._
+import zombies._
 
 val replication = Val[Int]
 val id = Val[Int]
 val worldid = Val[Int]
 
 // model parameters
-val infectionRange = Val[Double]
+/*val infectionRange = Val[Double]
 val humanRunSpeed = Val[Double]
 val humanExhaustionProbability = Val[Double]
 val humanFollowProbability = Val[Double]
@@ -20,6 +20,10 @@ val zombiePerception = Val[Double]
 val zombieMaxRotation = Val[Double]
 val humans = Val[Int]
 val zombies = Val[Int]
+*/
+val humanFollowProbability = Val[Double]
+val humanInformedRatio = Val[Double]
+val humanInformProbability = Val[Double]
 
 // generator parameters
 val worldSize = 40
@@ -45,75 +49,84 @@ val p3gen = Val[Double]
 val genworld = Val[Array[Array[Double]]]
 
 // outputs
-val humansDynamic = Val[Array[Int]]
-val zombiesDynamic = Val[Array[Int]]
-val killedDynamic = Val[Array[Int]]
-val zombifiedDynamic = Val[Array[Int]]
-val goneDynamic = Val[Array[Int]]
-val fleeDynamic = Val[Array[Int]]
-val pursueDynamic = Val[Array[Int]]
-val rescuedDynamic = Val[Array[Int]]
+//val humansDynamic = Val[Array[Int]]
+//val zombiesDynamic = Val[Array[Int]]
+//val killedDynamic = Val[Array[Int]]
+val peakTime = Val[Double]
+val peakSize = Val[Double]
+val totalZombified = Val[Double]
+val halfZombified = Val[Double]
+val spatialMoranZombified = Val[Double]
+val spatialDistanceMeanZombified = Val[Double]
+val spatialEntropyZombified = Val[Double]
+val spatialSlopeZombified = Val[Double]
 
 
 val model =
   ScalaTask("""
-    import _root_.zombies._
-    import _root_.zombies.worldgen._
-    import _root_.zombies.simulation._
-    import _root_.zombies.agent._
+    import zombies._
+    import zombies.worldgen._
 
     val rng = new util.Random(replication)
 
-    val simulation = Simulation.initialize(
-      world = genworld,
-      humans = humans,
-      zombies = zombies,
+    val world = closeWorld(jaudifyDenseWorlds(genworld))
+
+    //val (_,_,_,moran,avgDistance,density,components,_,avgBlockArea,avgComponentArea,fullDilationSteps,fullErosionSteps) = Morphology(world).toTuple
+
+    val result = zombieInvasion(
+      world = world,
+      zombies = 4,
+      humans = 250,
+      steps = 500,
       random = rng
     )
 
-    val steps = 500
-
-    val (simulations, events) = simulate(simulation, rng, steps)
-
-    val humansDynamic = simulations.map(_.agents.collect(Agent.human).size).grouped(10).map(_.head).toArray
-    val zombiesDynamic = simulations.map(_.agents.collect(Agent.zombie).size).grouped(10).map(_.head).toArray
-
-    val rescuedDynamic = events.map(_.collect(Event.rescued).size).grouped(10).map(_.sum).toArray
-    val killedDynamic = events.map(_.collect(Event.killed).size).grouped(10).map(_.sum).toArray
-    val zombifiedDynamic = events.map(_.collect(Event.zombified).size).grouped(10).map(_.sum).toArray
-    val fleeDynamic = events.map(_.collect(Event.flee).size).grouped(10).map(_.sum).toArray
-    val pursueDynamic = events.map(_.collect(Event.pursue).size).grouped(10).map(_.sum).toArray
-    val goneDynamic = events.map(_.collect(Event.gone).size).grouped(10).map(_.sum).toArray
+    //val humansDynamic = result.humansDynamic(20)
+    //val zombiesDynamic = result.zombiesDynamic(20)
+    //val rescuedDynamic = result.rescuedDynamic(20)
+    val peakTime = result.peakTimeZombified(window = 5).toDouble
+    val peakSize = result.peakSizeZombified(window = 5).toDouble
+    val totalZombified = result.totalZombified.toDouble
+    val halfZombified = result.halfZombified.toDouble
+    val spatialMoranZombified = result.spatialMoranZombified
+    val spatialDistanceMeanZombified = result.spatialDistanceMeanZombified
+    val spatialEntropyZombified = result.spatialEntropyZombified
+    val spatialSlopeZombified = result.spatialSlopeZombified
   """) set (
-    (inputs,outputs) += (replication,humans,zombies,id,worldid,generatorType),
-    (inputs,outputs) += (infectionRange, humanRunSpeed, humanExhaustionProbability, humanFollowProbability, humanInformedRatio, humanInformProbability, humanFightBackProbability, humanPerception, humanMaxRotation, humans, zombieRunSpeed, zombiePheromoneEvaporation, zombiePerception, zombieMaxRotation, zombies),
+    (inputs,outputs) += (replication,id,worldid,generatorType),
+    //(inputs,outputs) += (infectionRange, humanRunSpeed, humanExhaustionProbability, humanFollowProbability, humanInformedRatio, humanInformProbability, humanFightBackProbability, humanPerception, humanMaxRotation, humans, zombieRunSpeed, zombiePheromoneEvaporation, zombiePerception, zombieMaxRotation, zombies),
+    (inputs,outputs) += (humanFollowProbability,humanInformedRatio,humanInformProbability),
     (inputs,outputs) += (p1gen,p2gen,p3gen),
     inputs += (genworld),
-    outputs += (humansDynamic, zombiesDynamic, killedDynamic, zombifiedDynamic, goneDynamic, fleeDynamic, pursueDynamic, rescuedDynamic),
-    plugins += pluginsOf[_root_.zombies.simulation.Simulation],
-    humans := 250,
-    zombies := 4
+    //outputs += (humansDynamic, zombiesDynamic, killedDynamic, zombifiedDynamic, goneDynamic, fleeDynamic, pursueDynamic, rescuedDynamic),
+    outputs += (peakTime,peakSize,totalZombified,halfZombified
+    ,spatialMoranZombified,spatialDistanceMeanZombified,spatialEntropyZombified,spatialSlopeZombified),
+    plugins += pluginsOf[zombies.agent.Agent]
   )
 
 
-  //val purpose = "ONEFACTOR_SPATIALSENS_PHASEDIAG_GRID"
-  val purpose = "TEST"
+//val purpose = "ONEFACTOR_SPATIALSENS_PHASEDIAG_GRID"
+val purpose = "GRIDCOOP_SPATIALSENS_PHASEDIAG_GRID"
+//val purpose = "TEST"
 
-  val env = EGIEnvironment("vo.complex-systems.eu")
-  //val env = LocalEnvironment(10)
+//val env = EGIEnvironment("vo.complex-systems.eu")
+//val env = LocalEnvironment(10)
+val env = SLURMEnvironment("jraimb01","myria.criann.fr",
+    queue = "2tcourt",workDirectory = "/tmp",nTasks = 1,memory = 3 gigabytes,wallTime = 20 minutes)//,reservation="exmodelo0624")
 
-  val indics_hook = AppendToCSVFileHook(workDirectory / "exploration" / ((new java.text.SimpleDateFormat("yyyyMMdd_HHmmss")).format(new java.util.Date()))+"_"+purpose+".csv") set (arraysOnSingleRow := true)
 
+
+val indics_hook = CSVHook((workDirectory / "exploration" / (((new java.text.SimpleDateFormat("yyyyMMdd_HHmmss")).format(new java.util.Date()))+"_"+purpose+".csv")),arrayOnRow = true)
 
 // onefactor with 3 steps -> 3^13 = 1594323 (too much) ; 2 steps : 8192 -> can do repetitions and more spatial sampling
 val exploration = DirectSampling(
-  evaluation = (model on env by 1000 hook indics_hook),
+  evaluation = (model on env by 50 hook indics_hook),
   //evaluation = (model on env hook indics_hook),
   sampling =
     (
-    (OneFactorSampling(
-    (infectionRange in (0.0 to 0.5 by 0.25)) nominal 0.25,
-    (humanRunSpeed in (0.1 to 0.9 by 0.4)) nominal 0.5,
+    /*(OneFactorSampling(
+    (infectionRange in (0.0 to 0.5 by 0.5)) nominal 0.25,
+    (humanRunSpeed in (0.1 to 0.9 by 0.8)) nominal 0.5,
     (humanExhaustionProbability in (0.1 to 0.9 by 0.8)) nominal 0.5,
     (humanInformProbability in (0.1 to 0.9 by 0.8)) nominal 0.5,
     (humanFightBackProbability in (0.1 to 0.9 by 0.8)) nominal 0.5,
@@ -121,39 +134,43 @@ val exploration = DirectSampling(
     (humanFollowProbability in (0.1 to 0.9 by 0.8)) nominal 0.5,
     (humanPerception in (0.1 to 3.0 by 2.9)) nominal 1.5,
     (humanMaxRotation in (5.0 to 90.0 by 85.0)) nominal 45.0,
-    (zombieRunSpeed in (0.1 to 0.9 by 0.4)) nominal 0.5,
+    (zombieRunSpeed in (0.1 to 0.9 by 0.8)) nominal 0.5,
     (zombiePheromoneEvaporation in (0.0 to 1.0 by 1.0)) nominal 0.5,
     (zombiePerception in (0.1 to 3.0 by 2.9)) nominal 1.5,
     (zombieMaxRotation in (5.0 to 90.0 by 85.0)) nominal 45.0
     )
-  ) withIndex id ) x
-  (replication in (UniformDistribution[Int](10000) take 1))x//50)) x
+  )*/
+  (humanFollowProbability in (0.0 to 1.0 by 0.2))
+  x (humanInformedRatio in (0.0 to 1.0 by 0.2))
+  x (humanInformProbability in (0.0 to 1.0 by 0.2))
+  withIndex id ) x
+  (replication in (UniformDistribution[Int](10000) take 50))x//50)) x
   (
-  ((BlocksGridSpatialSampling(20,worldSize,
-    p1gen in Range(1.0,20.0),
-    p2gen in Range(1.0,10.0),
-    p3gen in Range(2.0,30.0),
-    genworld
+  (
+      (BlocksGridSpatialSampling(samples = 10,gridSize = worldSize,
+    blocks = p1gen in Range(1.0,20.0),
+    blockMinSize = p2gen in Range(1.0,10.0),
+    blockMaxSize = p3gen in Range(2.0,30.0),
+    prototype = genworld
   )x (generatorType is "blocks")) ::
-   (ExpMixtureThresholdSpatialSampling(20,worldSize,
-    p1gen in Range(1.0,10.0),
-    p2gen in Range(1.0,20.0),
-    p3gen in Range(0.0,1.0),
+   (ExpMixtureThresholdSpatialSampling(samples =10,gridSize =worldSize,
+    centers = p1gen in Range(1.0,10.0),
+    kernelRadius = p2gen in Range(1.0,20.0),
+    threshold = p3gen in Range(0.0,1.0),
+    prototype = genworld
+  )x (generatorType is "expMixture")) ::
+ /*  (PercolationGridSpatialSampling(samples =10,gridSize = worldSize,
+    percolationProba = p1gen in Range(0.3,1.0),
+    bordPoints = p2gen in Range(1.0,20.0),
+    linkwidth = p3gen in Range(1.0,5.0),
     genworld
-  )x (generatorType is "expMixture")) ::/*
-   (PercolationGridSpatialSampling(20,worldSize,
-    p1gen in Range(0.1,0.9),
-    p2gen in Range(1.0,10.0),
-    p3gen in Range(1.0,5.0),
-    genworld
-  ) x (generatorType is "percolation")) ::*/
+  ) x (generatorType is "percolation")) ::
+  (RandomSpatialSampling(10,genworld,worldSize,
+    org.openmole.core.workflow.tools.OptionalArgument(p1gen in Range(0.0,0.8))
+  ) x (generatorType is "random") x (p2gen is 0.0) x (p3gen is 0.0)) ::*/
    ((genworld is Array.fill(worldSize)(Array.fill(worldSize)(0.0)))x (generatorType is "jaude") x (p1gen is 0.0) x (p2gen is 0.0) x (p3gen is 0.0)) // world set to jaude in zombies when array is empty
  ) withIndex worldid)
 )
-
-// !!! same prototypes for a use in output like this + add generator name (can be done by hand here)
-// TODO update to have gen prototypes output + rename variables
-
 
 
 

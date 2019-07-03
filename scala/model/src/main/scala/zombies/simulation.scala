@@ -83,6 +83,8 @@ object simulation {
     def initialize(
       world: World,
       infectionRange: Double = physic.infectionRange,
+      demographicEntranceRate: Boolean = false,
+      entranceLambda: Double = physic.entranceLambda,
       humanRunSpeed: Double = physic.humanRunSpeed,
       humanPerception: Double = physic.humanPerception,
       humanMaxRotation: Double = physic.humanMaxRotation,
@@ -209,7 +211,9 @@ object simulation {
         zombieCanLeave = zombieCanLeave,
         walkSpeed = walkSpeed * cellSide,
         zombiePheromone = Pheromone(zombiePheromoneEvaporation),
-        rotationGranularity = rotationGranularity
+        rotationGranularity = rotationGranularity,
+        demographicEntranceRate = demographicEntranceRate,
+        entranceLambda = entranceLambda
       )
 
     }
@@ -234,7 +238,9 @@ object simulation {
     zombieCanLeave: Boolean,
     walkSpeed: Double,
     zombiePheromone: PheromoneMechanism,
-    rotationGranularity: Int)
+    rotationGranularity: Int,
+    demographicEntranceRate: Boolean,
+    entranceLambda: Double)
 
   def step(step: Int, simulation: Simulation, neighborhoodCache: NeighborhoodCache, rng: Random) = {
     val index = Agent.index(simulation.agents, simulation.world.side)
@@ -265,7 +271,7 @@ object simulation {
 
     val (na2, rescued) = Agent.rescue(w1, na1.flatten)
 
-    val newAgents = Agent.joining(w1, simulation, rng)
+    val newAgents = Agent.joining(w1, simulation, na2, rng)
 
     val events =
       infected.map(i => Zombified(i)) ++
@@ -329,6 +335,9 @@ object simulation {
     val zombiePheromoneEvaporation = 0.38
     val zombieMaxRotation = 30
     val zombieCanLeave = true
+
+    /* Additional parameters */
+    val entranceLambda = 0.1
   }
 
 }

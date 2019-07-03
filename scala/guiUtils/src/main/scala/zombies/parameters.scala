@@ -111,7 +111,7 @@ object parameters {
   val armyFollowProbability = Range("armyFollowProbability", RangeValue(0.0, 1.0, 0.01, physic.humanFollowProbability, 0.0), Variable)
   val armyMaxRotation = Range("armyMaxRotation", RangeValue(0.0, 180.0, 1.0, physic.humanMaxRotation, 0.0), Variable)
   val armyInformProbability = Range("armyInformProbability", RangeValue(0.0, 1.0, 0.01, 0.0, 0.05), Variable)
-  val armyAgressive = OnOff("armyAgressive", false, Variable, Seq())
+  val armyAggressive = OnOff("armyAggressive", true, Variable, Seq())
 
 
   val redCrossSize = Range("redCrossSize", RangeValue(0, 50, 1, 10, 0), Variable)
@@ -119,19 +119,19 @@ object parameters {
   val redCrossExhaustionMechanism = OnOff("redCrossExhaustion", false, Variable, Seq(redCrossExhaustionProbability.name))
   val redCrossFollowProbability = Range("redCrossFollowProbability", RangeValue(0.0, 1.0, 0.01, physic.humanFollowProbability, 0.0), Variable)
   val redCrossInformProbability = Range("redCrossInformProbability", RangeValue(0.0, 1.0, 0.01, 0.0, 0.05), Variable)
-  val redCrossAgressive = OnOff("redCrossAgressive", false, Variable, Seq())
+  val redCrossAggressive = OnOff("redCrossAggressive", false, Variable, Seq())
   val activationDelay = Range("redCrossInformProbability", RangeValue(0, 250, 1, 50, 0), Variable)
   val efficiencyProbability = Range("redCrossEfficiencyProbability", RangeValue(0.0, 1.0, 0.01, 0.1, 0.0), Variable)
 
   val armyOnOff = OnOff("army", false, Variable,
     Seq(armySize, armyFightBackProbability, armyExhaustionProbability, armyPerception, armyRunSpeed, armyFollowProbability, armyMaxRotation, armyInformProbability).map {
       _.name
-    } :+ armyAgressive.name)
+    } :+ armyAggressive.name)
 
   val redCrossOnOff = OnOff("red cross", false, Variable,
     Seq(redCrossSize, redCrossFollowProbability, redCrossInformProbability, activationDelay, efficiencyProbability).map {
       _.name
-    } ++ Seq(redCrossAgressive.name, redCrossExhaustionMechanism.name))
+    } ++ Seq(redCrossAggressive.name, redCrossExhaustionMechanism.name))
 
   //val army = Army(4, fightBackProbability = 0.99, exhaustionProbability = 0.1, perception = 4.0, runSpeed = 0.9, followRunning = 0.05, maxRotation = 180)
 

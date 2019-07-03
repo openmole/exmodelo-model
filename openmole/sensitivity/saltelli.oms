@@ -1,16 +1,12 @@
 import zombies._
 
 // Model inputs
+val seedDouble = Val[Double]
 val humanFollowProbability = Val[Double]
 val humanInformedRatio = Val[Double]
 val humanInformProbability = Val[Double]
 
-//val seed = Val[Long]
-
 // Model outputs
-val humansDynamic = Val[Array[Int]]
-val zombiesDynamic = Val[Array[Int]]
-val rescuedDynamic = Val[Array[Int]]
 val peakTime = Val[Double]
 val peakSize = Val[Double]
 val totalZombified = Val[Double]
@@ -19,13 +15,12 @@ val spatialMoranZombified = Val[Double]
 val spatialDistanceMeanZombified = Val[Double]
 val spatialEntropyZombified = Val[Double]
 val spatialSlopeZombified = Val[Double]
-//val spatialRipleyZombified = Val[Double]
 
 val model =
   ScalaTask("""
     import zombies._
 
-    val rng = new scala.util.Random
+    val rng = new scala.util.Random((seedDouble * 1000000).toInt)
 
     val result = zombieInvasion(
       humanFollowProbability = humanFollowProbability,
@@ -36,42 +31,43 @@ val model =
       steps = 500,
       random = rng)
 
-    val humansDynamic = result.humansDynamic(20)
-    val zombiesDynamic = result.zombiesDynamic(20)
-    val rescuedDynamic = result.rescuedDynamic(20)
     val peakTime = result.peakTimeZombified(window = 5).toDouble
     val peakSize = result.peakSizeZombified(window = 5).toDouble
     val totalZombified = result.totalZombified.toDouble
     val halfZombified = result.halfZombified.toDouble
-    //val spatialMoranZombified = result.spatialMoranZombified
-    //val spatialDistanceMeanZombified = result.spatialDistanceMeanZombified
-    //val spatialEntropyZombified = result.spatialEntropyZombified
-    //val spatialSlopeZombified = result.spatialSlopeZombified
-    //val spatialRipleyZombified = result.spatialRipleyZombified
+    val spatialMoranZombified = result.spatialMoranZombified
+    val spatialDistanceMeanZombified = result.spatialDistanceMeanZombified
+    val spatialEntropyZombified = result.spatialEntropyZombified
+    val spatialSlopeZombified = result.spatialSlopeZombified
   """) set (
-    inputs += (humanFollowProbability, humanInformedRatio, humanInformProbability),
-    outputs += (humansDynamic, zombiesDynamic,rescuedDynamic,peakTime,peakSize,totalZombified,halfZombified),//,spatialMoranZombified,spatialDistanceMeanZombified,spatialEntropyZombified,spatialSlopeZombified),//,spatialRipleyZombified),
+    inputs += (seedDouble, humanFollowProbability, humanInformedRatio, humanInformProbability),
+    outputs += (peakTime,peakSize,totalZombified,halfZombified,spatialMoranZombified,spatialDistanceMeanZombified,spatialEntropyZombified,spatialSlopeZombified),//,spatialRipleyZombified),
     plugins += pluginsOf[zombies.agent.Agent]
   )
 
-val purpose = "SALTELLI_GRID"
-//val purpose = "TEST"
+val purpose = "SALTELLI_SINGLE"
+val resdir = (workDirectory / "sensitivity" / (((new java.text.SimpleDateFormat("yyyyMMdd_HHmmss")).format(new java.util.Date()))+"_"+purpose))
+
+//val env =
+//  SLURMEnvironment(
+//    "gchere01",
+//    "myria.criann.fr",
+//    queue = "2tcourt",
+//    workDirectory = "/tmp",
+//    nTasks = 1,
+//    memory = 3 gigabytes,
+//    reservation= "exModelo0624",
+//    wallTime = 15 minutes
+//  )
 
 val env = EGIEnvironment("vo.complex-systems.eu")
-//val env = LocalEnvironment(10)
 
 val sen = SensitivitySaltelli(
-  //evaluation = (model on env),
-  evaluation = (model on env by 1000),
-  samples = 100000,
-  inputs = Seq(humanFollowProbability in (0.0,1.0), humanInformedRatio in (0.0,1.0),humanInformProbability in (0.0,1.0)),
-  outputs = Seq(peakTime, peakSize, totalZombified,halfZombified)//, spatialMoranZombified,spatialDistanceMeanZombified,spatialEntropyZombified,spatialSlopeZombified),//,spatialRipleyZombified)
+    evaluation = model,
+    inputs = Seq(seedDouble in (0.0,1.0),humanFollowProbability in (0.0,1.0), humanInformedRatio in (0.0,1.0),humanInformProbability in (0.0,1.0)),
+    outputs = Seq(peakTime, peakSize, totalZombified,halfZombified, spatialMoranZombified,spatialDistanceMeanZombified,spatialEntropyZombified,spatialSlopeZombified),
+    samples = 10000
 )
 
+sen on env by 200 hook resdir
 
-
-
-val resfile = workDirectory / "sensitivity" / (((new java.text.SimpleDateFormat("yyyyMMdd_HHmmss")).format(new java.util.Date()))+"_"+purpose)
-
-
-sen hook SaltelliHook(sen,resfile)

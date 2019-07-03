@@ -587,7 +587,7 @@ object worldgen {
       val xmin = network.nodes.map{_.x}.min;val xmax = network.nodes.map{_.x}.max
       val ymin = network.nodes.map{_.y}.min;val ymax = network.nodes.map{_.y}.max
       var iteration = 0
-      while(bordConnected<bordPoints||iteration<maxIterations){
+      while(bordConnected<bordPoints&&iteration<maxIterations){
         network = Network.percolate(network,percolationProba,linkFilter={
           l: Link => l.weight==0.0&&(
             (((l.e1.x!=xmin)&&(l.e2.x!=xmin))||((l.e1.x==xmin)&&(l.e2.x!=xmin))||((l.e2.x==xmin)&&(l.e1.x!=xmin)))&&

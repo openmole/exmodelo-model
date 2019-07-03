@@ -1,0 +1,102 @@
+import zombies._
+
+// Model inputs
+val humanFollowProbability = Val[Double]
+val humanInformedRatio = Val[Double]
+val humanInformProbability = Val[Double]
+
+val replication = Val[Long]
+val id = Val[Int]
+
+// Model outputs
+val humansDynamic = Val[Array[Int]]
+val zombiesDynamic = Val[Array[Int]]
+val rescuedDynamic = Val[Array[Int]]
+val peakTime = Val[Double]
+val peakSize = Val[Double]
+val totalZombified = Val[Double]
+val halfZombified = Val[Double]
+val spatialMoranZombified = Val[Double]
+val spatialDistanceMeanZombified = Val[Double]
+val spatialEntropyZombified = Val[Double]
+val spatialSlopeZombified = Val[Double]
+//val spatialRipleyZombified = Val[Double]
+
+val model =
+  ScalaTask("""
+    import zombies._
+
+    val rng = new scala.util.Random(replication)
+
+    val result = zombieInvasion(
+      humanFollowProbability = humanFollowProbability,
+      humanInformedRatio =humanInformedRatio,
+      humanInformProbability = humanInformProbability,
+      zombies = 4,
+      humans = 250,
+      steps = 500,
+      random = rng)
+
+    val humansDynamic = result.humansDynamic(20)
+    val zombiesDynamic = result.zombiesDynamic(20)
+    val rescuedDynamic = result.rescuedDynamic(20)
+    val peakTime = result.peakTimeZombified(window = 5).toDouble
+    val peakSize = result.peakSizeZombified(window = 5).toDouble
+    val totalZombified = result.totalZombified.toDouble
+    val halfZombified = result.halfZombified.toDouble
+    val spatialMoranZombified = result.spatialMoranZombified
+    val spatialDistanceMeanZombified = result.spatialDistanceMeanZombified
+    val spatialEntropyZombified = result.spatialEntropyZombified
+    val spatialSlopeZombified = result.spatialSlopeZombified
+    //val spatialRipleyZombified = result.spatialRipleyZombified
+  """) set (
+    (inputs,outputs) += (humanFollowProbability, humanInformedRatio, humanInformProbability,replication,id),
+    outputs += (humansDynamic, zombiesDynamic,rescuedDynamic,peakTime,peakSize,totalZombified,halfZombified),//,spatialMoranZombified,spatialDistanceMeanZombified,spatialEntropyZombified,spatialSlopeZombified),//,spatialRipleyZombified),
+    plugins += pluginsOf[zombies.agent.Agent]
+  )
+
+//val purpose = "LHS_GRID"
+//val purpose = "TEST_GRID"
+//val purpose = "LHS_SLURM"
+val purpose = "GRID_SLURM"
+//val purpose = "TEST"
+
+//val env = EGIEnvironment("vo.complex-systems.eu")
+//val env = LocalEnvironment(1)
+val env =
+  SLURMEnvironment(
+    "jraimb01",
+    "myria.criann.fr",
+    //queue = "debug",
+    queue = "t2court",
+    workDirectory = "/tmp",
+    nTasks = 1,
+    memory = 3 gigabytes,
+    wallTime = 20 minutes
+  )
+
+
+val reshook = workDirectory / "exploration" / (((new java.text.SimpleDateFormat("yyyyMMdd_HHmmss")).format(new java.util.Date()))+"_"+purpose)
+
+
+val explo = DirectSampling(
+  //evaluation = (model hook reshook on env),
+  evaluation = (model hook reshook on env by 500),
+  sampling = ( /*LHS(
+      1000,
+      humanFollowProbability in (0.0,1.0),
+      humanInformedRatio in (0.0,1.0),
+      humanInformProbability in (0.0,1.0)
+    )*/
+    (humanFollowProbability in (0.0 to 1.0 by 0.1))
+    x (humanInformedRatio in (0.0 to 1.0 by 0.1))
+    x (humanInformProbability in (0.0 to 1.0 by 0.1))
+    ) withIndex id
+    x (replication in UniformDistribution[Long](100000) take 100)
+ )
+
+
+explo
+
+
+
