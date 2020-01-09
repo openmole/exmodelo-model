@@ -9,6 +9,10 @@ package object zombies extends DSL {
     def humansDynamic(by: Int = defaultGroupSize) = metrics.humansDynamic(results, by)
     def walkingHumansDynamic(by: Int = defaultGroupSize) = metrics.walkingHumansDynamic(results, by)
     def runningHumansDynamic(by: Int = defaultGroupSize) = metrics.runningHumansDynamic(results, by)
+    def uninformedHumansDynamic(by: Int = defaultGroupSize) = metrics.uninformedHumansDynamic(results, by)
+    def informedHumansDynamic(by: Int = defaultGroupSize) = metrics.informedHumansDynamic(results, by)
+    def unalertedHumansDynamic(by: Int = defaultGroupSize) = metrics.unalertedHumansDynamic(results, by)
+    def alertedHumansDynamic(by: Int = defaultGroupSize) = metrics.alertedHumansDynamic(results, by)
 
     def zombiesDynamic(by: Int = defaultGroupSize) = metrics.zombiesDynamic(results, by)
     def walkingZombiesDynamic(by: Int = defaultGroupSize) = metrics.walkingZombiesDynamic(results, by)
@@ -16,6 +20,7 @@ package object zombies extends DSL {
     def rescuedDynamic(by: Int = defaultGroupSize) = metrics.rescuedDynamic(results, by)
     def filteredRescuedDynamic(runSpeed: Option[Double => Boolean] = None, informProbability: Option[Double => Boolean] = None, by: Int = defaultGroupSize) =
       metrics.filteredRescuedDynamic(results, runSpeed, informProbability, by)
+    def accumulatedRescuedDynamic(by: Int = defaultGroupSize) = metrics.accumulatedRescuedDynamic(results, by)
 
     def killedDynamic(by: Int = defaultGroupSize) = metrics.killedDynamic(results, by)
     def zombifiedDynamic(by: Int = defaultGroupSize) = metrics.zombifiedDynamic(results, by)
