@@ -1,8 +1,8 @@
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.4")
+addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.5")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.31")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.1.0")
 
-addSbtPlugin("fr.iscpif" % "scalajs-execnpm" % "0.7")
+addSbtPlugin("org.openmole" % "scalajs-execnpm" % "0.10")
 
 

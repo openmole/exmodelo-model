@@ -60,7 +60,7 @@ object Model {
     // Sampling over simulation data
     val maxIndSampling = (tWarp - t0) / dt
     val samplingStep = maxIndSampling / ABMTimeSerieSteps
-    val samplingSteps = (0.0 to maxIndSampling by samplingStep)
+    val samplingSteps = (BigDecimal(0.0) to maxIndSampling by samplingStep) map {_.toDouble}
 
     val humansWalkingSampled = samplingSteps.map(interpolate(humansWalking,_))
     val humansRunningSampled = samplingSteps.map(interpolate(humansRunning,_))

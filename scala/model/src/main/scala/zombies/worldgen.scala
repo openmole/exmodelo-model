@@ -112,7 +112,7 @@ object worldgen {
       val ymin = network.nodes.map{_.y}.min;val ymax = network.nodes.map{_.y}.max
       def xcor(x: Double): Int = math.max(xmin.toDouble,math.min(xmax.toDouble,math.round(x))).toInt
       def ycor(y: Double): Int = math.max(ymin.toDouble,math.min(ymax.toDouble,math.round(y))).toInt
-      val res: Array[Array[Double]] = (xmin to xmax by 1.0).toArray.map{case _ => (ymin to ymax by 1.0).toArray.map{case _ =>0.0}}
+      val res: Array[Array[Double]] = (BigDecimal(xmin) to xmax by 1.0).map{_.toDouble}.toArray.map{case _ => (BigDecimal(ymin) to ymax by 1.0).map{_.toDouble}.toArray.map{case _ =>0.0}}
       network.links.toSeq.filter{_.weight>0.0}.foreach{case l =>
         val i1 = l.e1.x - xmin;val j1 = l.e1.y - ymin
         val i2 = l.e2.x - xmin;val j2 = l.e2.y - ymin
@@ -120,10 +120,10 @@ object worldgen {
         val jstep = (j1 - j2) match {case x if math.abs(x) < 1e-10 => 0.0 ;case _ => math.sin(math.atan((j2 - j1)/(i2 - i1)))*footPrintResolution}
         val nsteps = (i1 - i2) match {case x if math.abs(x) < 1e-10 => (j2 - j1)/jstep;case _ => (i2 - i1)/istep}
         var x = l.e1.x;var y = l.e1.y
-        (0.0 to nsteps by 1.0).foreach{_ =>
+        (BigDecimal(0.0) to nsteps by 1.0).map{_.toDouble}.foreach{_ =>
           for {
-            k1 <- - (linkwidth-1)/2 to (linkwidth-1)/2 by 1.0
-            k2 <-  - (linkwidth-1)/2 to (linkwidth-1)/2 by 1.0
+            k1 <- (- BigDecimal((linkwidth-1)/2) to (linkwidth-1)/2 by 1.0).map{_.toDouble}
+            k2 <- (- BigDecimal((linkwidth-1)/2) to (linkwidth-1)/2 by 1.0).map{_.toDouble}
           } yield {
             res(xcor(x+k1))(ycor(y+k2)) = 1.0
           }
@@ -185,7 +185,7 @@ object worldgen {
         res.append(Network(currentcomponent._1.toSet,currentcomponent._2.toSet))
       }
 
-      res
+      res.toSeq
     }
 
 
@@ -867,7 +867,7 @@ object worldgen {
 
     def zipWithPosition(m :Array[Array[Double]]): Seq[(Double, (Int,Int))] = {
       for {
-        (row, i) <- m.zipWithIndex
+        (row, i) <- m.zipWithIndex.toSeq
         (content, j) <- row.zipWithIndex
       } yield (content,(i, j))
     }

@@ -55,7 +55,7 @@ object ModelModule {
     // Sampling over simulation data
     val maxIndSampling = (tWarp - t0) / dt
     val samplingStep = maxIndSampling / ABMTimeSerieSteps
-    val samplingSteps = (0.0 to maxIndSampling by samplingStep)
+    val samplingSteps = (BigDecimal(0.0) to maxIndSampling by samplingStep).map{_.toDouble}
 
     val humansUninformedSampled = samplingSteps.map(interpolate(humansUninformed,_))
     val humansInformedSampled = samplingSteps.map(interpolate(humansInformed,_))

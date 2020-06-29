@@ -192,7 +192,7 @@ object metrics {
       * @return
       */
     def slope(values: Array[Double]): Double = {
-      def distribution: Array[Double] = values.sorted(Ordering.Double.reverse).filter(_ > 0)
+      def distribution: Array[Double] = values.sortBy(x=> -x).filter(_ > 0)
       def distributionLog: Array[Array[Double]] = distribution.zipWithIndex.map { case (q, i) => Array(log(i + 1), log(q)) }
       val simpleRegression = new SimpleRegression(true)
       simpleRegression.addData(distributionLog)
