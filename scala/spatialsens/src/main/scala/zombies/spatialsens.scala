@@ -8,6 +8,7 @@ import zombies.guitutils.controls.{Controller, Mecanism}
 import zombies.worldgen.GridGeneratorLauncher
 import zombies.worldgen._
 import scala.scalajs.js.annotation.JSExportTopLevel
+import scala.language.postfixOps
 
 object spatialsens {
 

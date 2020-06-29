@@ -2,6 +2,7 @@ package zombies
 
 import zombies.guitutils.parameters._
 import scala.scalajs.js.annotation.JSExportTopLevel
+import scala.language.postfixOps
 
 object cooperation {
   @JSExportTopLevel("zombies")
