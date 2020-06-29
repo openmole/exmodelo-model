@@ -21,12 +21,12 @@ Then browse:
 scala/zombieland/target/zombies.html
 ```
 
-## Build sub-model Vigilence
+## Build sub-model Cooperation
 
 ```sh
 > cd scala
 > sbt
-sbt> project vigilence
+sbt> project cooperation
 sbt> buildGUI
 ```
 
@@ -50,7 +50,15 @@ scala/spatialsens/target/zombies.html
 ```
 
 ## Build sub-model ode
+```sh
+> cd scala
+> sbt
+sbt> project ode
+sbt> osgiBundle
+```
 
+The ode jar program is:
+scala/ode/target/scala-2.13/ode_2.13-0.1.0-SNAPSHOT.jar
 
 ## Build Zombieland jar for OpenMOLE
 
