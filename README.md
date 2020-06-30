@@ -9,6 +9,8 @@ sbt> run
 
 ## Build Zombieland
 
+(you need to install npm to run this version)
+
 ```sh
 > cd scala
 > sbt
