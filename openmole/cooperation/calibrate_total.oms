@@ -15,7 +15,7 @@ NSGA2Evolution(
     humanInformProbability in (0.0, 1.0),
     humanFollowProbability in (0.0, 1.0)
   ),
-  objectives = Seq(deltaRescue),
+  objective = Seq(deltaRescue),
   termination = 100000,
   parallelism = 200,
   distribution = Island(5 minutes),

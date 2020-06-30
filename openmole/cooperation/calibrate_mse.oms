@@ -5,7 +5,7 @@ def distance(vs: Vector[Array[Int]]) = {
   absoluteDistance(data, vs.transpose.map(_.median))
 }
 
-val env = EGIEnvironment("vo.complex-systems.eu")
+//val env = EGIEnvironment("vo.complex-systems.eu")
 
 NSGA2Evolution(
   evaluation = model,
@@ -14,9 +14,9 @@ NSGA2Evolution(
     humanInformProbability in (0.0, 1.0),
     humanFollowProbability in (0.0, 1.0)
   ),
-  objectives = Seq(rescuedDynamic aggregate distance),
+  objective = Seq(rescuedDynamic aggregate distance),
   termination = 100000,
   parallelism = 200,
   distribution = Island(5 minutes),
   stochastic = Stochastic(seed = seed)
-) hook (workDirectory / "results/calibration/distance", frequency = 100) on env
+) hook (workDirectory / "results/calibration/distance", frequency = 100) //on env

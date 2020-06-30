@@ -9,6 +9,6 @@ val lhs =
     )
 
 DirectSampling(
-  evaluation = model hook CSVHook(workDirectory / "results/lhs.csv", arrayOnRow = true),
+  evaluation = model hook CSVHook(workDirectory / "results/lhs.csv"),
   sampling = lhs
 )

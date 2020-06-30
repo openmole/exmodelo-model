@@ -47,5 +47,5 @@ val model =
     plugins += pluginsOf[zombies.agent.Agent]    
   )
   
-model hook DisplayHook()
+model hook display
 

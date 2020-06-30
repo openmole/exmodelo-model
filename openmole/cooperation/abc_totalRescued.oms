@@ -1,5 +1,5 @@
 import _file_.model._
-import _file_.environment._
+//import _file_.environment._
 
 
 val abc =
@@ -19,7 +19,7 @@ val abc =
 
 val save = ABCHook(abc, workDirectory / "results/abc/totalRescued/")
 
-val env = EGIEnvironment("vo.complex-systems.eu")
+//val env = EGIEnvironment("vo.complex-systems.eu")
 //val env = LocalEnvironment(4)
 
-abc hook save on default_env.env
+abc hook save //on default_env.env

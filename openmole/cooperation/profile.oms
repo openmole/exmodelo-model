@@ -23,6 +23,6 @@ val evolution =
   
 val save = SavePopulationHook(evolution, workDirectory / "results/meanSquare/profile/", frequency = 100)
 
-val env = EGIEnvironment("vo.complex-systems.eu")
+//val env = EGIEnvironment("vo.complex-systems.eu")
 
-evolution hook save on env
+evolution hook save //on env

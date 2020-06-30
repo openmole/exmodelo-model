@@ -1,17 +1,19 @@
 import _file_.model._
 
-val rescuedDynamicMedian = Val[Array[Double]]
+//val rescuedDynamicMedian = Val[Array[Double]]
   
-val medianTask =
+/*val medianTask =
   ScalaTask("""val rescuedDynamicMedian = rescuedDynamic.transpose.map(_.median)""") set (
     inputs += rescuedDynamic.array,
     outputs += rescuedDynamicMedian
-  ) 
+  ) */
+  
+def dynamicMedian(rescuedDynamic: Array[Array[Int]]) = rescuedDynamic.transpose.map(_.median)
   
 Replication(
-  evaluation = model hook CSVHook(workDirectory / "results/replication.csv", arrayOnRow = true),
+  evaluation = model hook (workDirectory / "results/replication.csv"),
   seed = seed,
-  replications = 100,
-  aggregation = medianTask hook CSVHook(workDirectory / "results/replication_median.csv", arrayOnRow = true) 
- ) 
+  sample = 100,
+  aggregation = Seq(rescuedDynamic aggregate dynamicMedian)
+ ) hook (workDirectory / "results/replication_median.csv") 
 
