@@ -1,0 +1,48 @@
+// Model parameters
+XXX
+
+val seed = Val[Long]
+
+// Output
+val rescuedDynamic = Val[Array[Int]]
+
+val averageData = Vector(0, 2.64, 17.66, 31.73, 34.97, 28.4, 16.06, 7.49, 3.96, 1.84, 0.69, 0.41, 0.23, 0.06, 0, 0.02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+// Fitness function
+def distance(data: Vector[Double])(vs: Vector[Array[Int]]) = {
+  val simulated = vs.transpose.map(_.map(_.toDouble).average)
+  absoluteDistance(data, simulated)
+}
+
+val model =
+  ScalaTask("""
+    import zombies._
+    
+    val rng = Random(seed)
+  
+    val result = zombieInvasion(
+      humanFollowProbability = XXX,
+      humanInformedRatio = XXX,
+      humanInformProbability = XXX,
+      zombies = 4,
+      humans = 250,
+      steps = 500,
+      random = rng)
+    
+    val rescuedDynamic = result.rescuedDynamic()
+  """) set (
+    inputs += (XXX),
+    outputs += (XXX),
+    
+    plugins += pluginsOf[zombies.agent.Agent]    
+  )
+  
+ProfileEvolution(
+    evaluation = XXX,
+    objective = XXX,
+    x = XXX,
+    nX = XXX,
+    genome = XXX,
+    termination = XXX,
+    stochastic = Stochastic(seed = seed)
+  ) XXX

@@ -1,0 +1,3 @@
+val a = Val[Int]
+val b = Val[Int]
+val k = Val[Int]

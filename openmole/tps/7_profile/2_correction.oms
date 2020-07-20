@@ -1,0 +1,55 @@
+val humanFollowProbability = Val[Double]
+val humanInformedRatio = Val[Double]
+val humanInformProbability = Val[Double]
+
+val seed = Val[Long]
+val rescuedDynamic = Val[Array[Int]]
+ 
+val averageData = Vector(0, 2.64, 17.66, 31.73, 34.97, 28.4, 16.06, 7.49, 3.96, 1.84, 0.69, 0.41, 0.23, 0.06, 0, 0.02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+  
+ 
+def distance(data: Vector[Double])(vs: Vector[Array[Int]]) = {
+  val simulated = vs.transpose.map(_.map(_.toDouble).average)
+  absoluteDistance(data, simulated)
+}
+
+def profile(param: Val[Double]) = {
+  val model =
+  ScalaTask("""
+    import zombies._
+    
+    val rng = Random(seed)
+  
+    val result = zombieInvasion(
+      humanFollowProbability = humanFollowProbability,
+      humanInformedRatio = humanInformedRatio,
+      humanInformProbability = humanInformProbability,
+      zombies = 4,
+      humans = 250,
+      steps = 500,
+      random = rng)
+    
+    val rescuedDynamic = result.rescuedDynamic()
+  """) set (
+    inputs += (seed, humanFollowProbability, humanInformedRatio, humanInformProbability),
+    outputs += (rescuedDynamic),
+    
+    plugins += pluginsOf[zombies.agent.Agent]    
+  )
+  
+  ProfileEvolution(
+    evaluation = model,
+    objective = rescuedDynamic aggregate distance(averageData),
+    x = param,
+    nX = 100,
+    genome = Seq(
+      humanInformedRatio in (0.0, 1.0),
+      humanInformProbability in (0.0, 1.0),
+      humanFollowProbability in (0.0, 1.0)
+    ),
+    termination = 1000,
+    stochastic = Stochastic(seed = seed)
+  ) hook (workDirectory / s"results/profile/${param.name}/", frequency = 100)
+}
+
+EmptyTask() -- (profile(humanFollowProbability), profile(humanInformedRatio), profile(humanInformProbability))
