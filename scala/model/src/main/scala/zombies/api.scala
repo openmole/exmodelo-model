@@ -262,9 +262,6 @@ trait DSL {
       world: World,
       random: Random) = {
 
-
-      val cellSide = space.cellSide(world.side)
-
       def toPosition(l: Location) = {
         val (x, y) = l
         zombies.world.World.get(world, x, y) match {
@@ -344,25 +341,32 @@ trait DSL {
     maxRotation:  AgentGenerator.Optional[Double] = None,
     location:  AgentGenerator.Optional[Location] = None) extends AgentGenerator
 
-  def agent(simulation: Simulation, world: World, random: Random, generator: AgentGenerator) = {
-     AgentGenerator.generateAgent(
+  implicit class EntranceLawParameterDecorator(e: EntranceLaw.Parameter) {
+    def around(range: Double) = {
+      val cellSide = space.cellSide(e.world.side)
+      Agent.around(_root_.zombies.world.World.cellCenter(e.world, e.entranceLocation), range * cellSide, e.index, e.neighborhoodCache).toVector
+    }
+
+    def enter(generator: Iterable[AgentGenerator]) = generator.flatMap { generator =>
+      AgentGenerator.generateAgent(
         generator,
-        walkSpeed = simulation.walkSpeedParameter,
-        humanRunSpeed = simulation.humanRunSpeedParameter,
-        humanPerception = simulation.humanPerceptionParameter,
-        humanMaxRotation = simulation.humanMaxRotation,
-        humanExhaustionProbability = simulation.humanExhaustionProbability,
-        humanFollowProbability = simulation.humanFollowProbability,
-        humanInformedRatio = simulation.humanInformedRatio,
-        humanInformProbability = simulation.humanInformProbability,
-        humanFightBackProbability = simulation.humanFightBackProbability,
-        zombieRunSpeed = simulation.zombieRunSpeedParameter,
-        zombiePerception = simulation.zombiePerceptionParameter,
-        zombieMaxRotation = simulation.zombieMaxRotation,
-        zombieCanLeave = simulation.zombieCanLeave,
-        world = world,
-        random = random
+        walkSpeed = e.simulation.walkSpeedParameter,
+        humanRunSpeed = e.simulation.humanRunSpeedParameter,
+        humanPerception = e.simulation.humanPerceptionParameter,
+        humanMaxRotation = e.simulation.humanMaxRotation,
+        humanExhaustionProbability = e.simulation.humanExhaustionProbability,
+        humanFollowProbability = e.simulation.humanFollowProbability,
+        humanInformedRatio = e.simulation.humanInformedRatio,
+        humanInformProbability = e.simulation.humanInformProbability,
+        humanFightBackProbability = e.simulation.humanFightBackProbability,
+        zombieRunSpeed = e.simulation.zombieRunSpeedParameter,
+        zombiePerception = e.simulation.zombiePerceptionParameter,
+        zombieMaxRotation = e.simulation.zombieMaxRotation,
+        zombieCanLeave = e.simulation.zombieCanLeave,
+        world = e.world,
+        random = e.random
       )
+    }.toVector
   }
 
   val CaptureTrap = world.CaptureTrap

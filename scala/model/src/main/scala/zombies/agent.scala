@@ -102,11 +102,14 @@ object agent {
       space.neighbors(Index.get(index, _, _), x, y, neighborhoodSize).filter(n => distance(Agent.position(n), Agent.position(agent)) < range)
     }
 
-    def neighbors(index: Index[Agent], agent: Agent, range: Double, neighborhood: NeighborhoodCache): Array[Agent] = {
-      val (x, y) = Agent.location(agent, index.side)
+    def neighbors(index: Index[Agent], agent: Agent, range: Double, neighborhood: NeighborhoodCache): Array[Agent] =
+      around(Agent.position(agent), range, index, neighborhood)
+
+    def around(position: Position, range: Double, index: Index[Agent], neighborhood: NeighborhoodCache): Array[Agent] = {
+      val (x, y) = positionToLocation(position, index.side)
       neighborhood(x)(y).
         flatMap { case(x, y) => Index.get(index, x, y) }.
-        filter(n => distance(Agent.position(n), Agent.position(agent)) < range)
+        filter(n => distance(Agent.position(n), position) < range)
     }
 
     def projectedVelocities(granularity: Int, maxRotation: Double, velocity: Velocity, speed: Double) =
