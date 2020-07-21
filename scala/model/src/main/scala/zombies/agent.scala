@@ -207,6 +207,48 @@ object agent {
       (newAgents.toVector, rescued.toVector)
     }
 
+
+    object EntranceLaw {
+
+      def humanPoison(lambda: Double): EntranceLaw =
+        (l, world, simulation, agents, random) => {
+          val (x, y) = l
+          val L = Math.exp(-lambda)
+          var p = 1.0
+          var k = 0
+
+          do {
+            k += 1
+            p *= random.nextDouble()
+          } while (p > L)
+
+          val enter = k - 1
+
+          val informed = random.nextDouble() < simulation.humanInformedRatio
+          val rescue = Rescue(informed = informed, informProbability = simulation.humanInformProbability)
+
+          def human = Human.apply(
+            world,
+            walkSpeed = simulation.walkSpeed,
+            runSpeed = simulation.humanRunSpeed ,
+            exhaustionProbability = simulation.humanExhaustionProbability,
+            perception = simulation.humanPerception,
+            maxRotation = simulation.humanMaxRotation,
+            followRunningProbability = simulation.humanFollowProbability,
+            fight = Fight(simulation.humanFightBackProbability),
+            rescue = rescue,
+            canLeave = true,
+            function = Human.Civilian,
+            rng = random).copy(position = World.cellCenter(world, (x, y)))
+
+          (0 until enter).map(_ => human)
+        }
+
+    }
+
+    type EntranceLaw = (Location, World, Simulation, Seq[Agent], Random) => Seq[Agent]
+
+
     def joining(world: World, simulation: Simulation, agents: Seq[Agent], random: Random) = {
 
       val join =
@@ -217,42 +259,7 @@ object agent {
         } yield c match {
           case c: Floor =>
             c.entrance match {
-              case HumanEntrance =>
-                val demographicFactor =
-                  if(simulation.demographicEntranceRate) agents.collect(Agent.human).size.toDouble
-                  else 1.0
-
-                val poisson = {
-                  val L = Math.exp(-simulation.entranceLambda * demographicFactor)
-                  var p = 1.0
-                  var k = 0
-
-                  do {
-                    k += 1
-                    p *= random.nextDouble()
-                  } while ( p > L )
-
-                  k - 1
-                }
-
-                val informed = random.nextDouble() < simulation.humanInformedRatio
-                val rescue = Rescue(informed = informed, informProbability = simulation.humanInformProbability)
-
-                def human = Human.apply(
-                  world,
-                  walkSpeed = simulation.walkSpeed,
-                  runSpeed = simulation.humanRunSpeed ,
-                  exhaustionProbability = simulation.humanExhaustionProbability,
-                  perception = simulation.humanPerception,
-                  maxRotation = simulation.humanMaxRotation,
-                  followRunningProbability = simulation.humanFollowProbability,
-                  fight = Fight(simulation.humanFightBackProbability),
-                  rescue = rescue,
-                  canLeave = true,
-                  function = Human.Civilian,
-                  rng = random).copy(position = World.cellCenter(world, (x, y)))
-
-                (0 until poisson).map(_ => human)
+              case HumanEntrance => simulation.entranceLaw((x, y), world, simulation, agents, random)
               case _ => Seq()
             }
           case _ => Seq()

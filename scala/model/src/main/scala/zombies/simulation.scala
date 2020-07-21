@@ -2,6 +2,7 @@ package zombies
 
 import agent._
 import world._
+import zombies.agent.Agent.EntranceLaw
 
 import scala.util.Random
 
@@ -78,13 +79,14 @@ object simulation {
     activationDelay: Int,
     efficiencyProbability: Double) extends RedCrossOption
 
+
+  case class HummanParameter()
+
   object Simulation {
 
     def initialize(
       world: World,
       infectionRange: Double = physic.infectionRange,
-      demographicEntranceRate: Boolean = false,
-      entranceLambda: Double = physic.entranceLambda,
       humanRunSpeed: Double = physic.humanRunSpeed,
       humanPerception: Double = physic.humanPerception,
       humanMaxRotation: Double = physic.humanMaxRotation,
@@ -101,6 +103,7 @@ object simulation {
       zombieCanLeave: Boolean = physic.zombieCanLeave,
       zombies: Int,
       walkSpeed: Double = physic.walkSpeed,
+      entranceLaw: EntranceLaw = EntranceLaw.humanPoison(physic.entranceLambda),
       rotationGranularity: Int = 5,
       army: ArmyOption = NoArmy,
       redCross: RedCrossOption = NoRedCross,
@@ -212,8 +215,7 @@ object simulation {
         walkSpeed = walkSpeed * cellSide,
         zombiePheromone = Pheromone(zombiePheromoneEvaporation),
         rotationGranularity = rotationGranularity,
-        demographicEntranceRate = demographicEntranceRate,
-        entranceLambda = entranceLambda
+        entranceLaw = entranceLaw
       )
 
     }
@@ -239,8 +241,7 @@ object simulation {
     walkSpeed: Double,
     zombiePheromone: PheromoneMechanism,
     rotationGranularity: Int,
-    demographicEntranceRate: Boolean,
-    entranceLambda: Double)
+    entranceLaw: EntranceLaw)
 
   def step(step: Int, simulation: Simulation, neighborhoodCache: NeighborhoodCache, rng: Random) = {
     val index = Agent.index(simulation.agents, simulation.world.side)
@@ -282,7 +283,7 @@ object simulation {
     (simulation.copy(agents = na2 ++ newAgents, world = w1), events)
   }
 
- type SimulationResult = (List[Simulation], List[Vector[Event]])
+  type SimulationResult = (List[Simulation], List[Vector[Event]])
 
 
   def simulate(simulation: Simulation, rng: Random, steps: Int): SimulationResult = {

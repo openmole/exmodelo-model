@@ -1,6 +1,7 @@
 package zombies
 
 import zombies.agent.Agent
+import zombies.agent.Agent.EntranceLaw
 import zombies.simulation.{ArmyOption, NoArmy, NoRedCross, RedCrossOption, Simulation}
 import zombies.space.{Location, Position}
 import zombies.world.World
@@ -36,8 +37,6 @@ trait DSL {
   def zombieInvasion(
     world: World = quarantine,
     infectionRange: Double = physic.infectionRange,
-    demographicEntranceRate: Boolean = false,
-    entranceLambda: Double = physic.entranceLambda,
     humanRunSpeed: Double = physic.humanRunSpeed,
     humanPerception: Double = physic.humanPerception,
     humanMaxRotation: Double = physic.humanMaxRotation,
@@ -46,6 +45,7 @@ trait DSL {
     humanInformedRatio: Double = physic.humanInformedRatio,
     humanInformProbability: Double = physic.humanInformProbability,
     humanFightBackProbability: Double = physic.humanFightBackProbability,
+    humanEntranceLaw: EntranceLaw = EntranceLaw.humanPoison(physic.entranceLambda),
     humans: Int = 250,
     zombieRunSpeed: Double = physic.zombieRunSpeed,
     zombiePerception: Double = physic.zombiePerception,
@@ -64,7 +64,6 @@ trait DSL {
     val state = initialize(
       world = world,
       infectionRange = infectionRange,
-      demographicEntranceRate = demographicEntranceRate,
       humanRunSpeed = humanRunSpeed,
       humanPerception = humanPerception,
       humanMaxRotation = humanMaxRotation,
@@ -73,6 +72,7 @@ trait DSL {
       humanInformedRatio = humanInformedRatio,
       humanInformProbability = humanInformProbability,
       humanFightBackProbability = humanFightBackProbability,
+      entranceLaw = humanEntranceLaw,
       humans = humans,
       zombieRunSpeed = zombieRunSpeed,
       zombiePerception = zombiePerception,
@@ -93,8 +93,6 @@ trait DSL {
   def initialize(
     world: World = quarantine,
     infectionRange: Double = physic.infectionRange,
-    demographicEntranceRate: Boolean = false,
-    entranceLambda: Double = physic.entranceLambda,
     humanRunSpeed: Double = physic.humanRunSpeed,
     humanPerception: Double = physic.humanPerception,
     humanMaxRotation: Double = physic.humanMaxRotation,
@@ -110,12 +108,12 @@ trait DSL {
     zombiePheromoneEvaporation: Double = physic.zombiePheromoneEvaporation,
     zombieCanLeave: Boolean = physic.zombieCanLeave,
     zombies: Int = 4,
+    entranceLaw: EntranceLaw = EntranceLaw.humanPoison(physic.entranceLambda),
     walkSpeed: Double = physic.walkSpeed,
     rotationGranularity: Int = 5,
     army: ArmyOption = NoArmy,
     redCross: RedCrossOption = NoRedCross,
     agents: Seq[AgentGenerator] = Seq(),
-    steps: Int = 500,
     random: scala.util.Random) = {
 
     val generatedAgents =
@@ -143,8 +141,6 @@ trait DSL {
     Simulation.initialize(
       world = world,
       infectionRange = infectionRange,
-      demographicEntranceRate = demographicEntranceRate,
-      entranceLambda = entranceLambda,
       humanRunSpeed = humanRunSpeed,
       humanPerception = humanPerception,
       humanMaxRotation = humanMaxRotation,
@@ -153,6 +149,7 @@ trait DSL {
       humanInformedRatio = humanInformedRatio,
       humanInformProbability = humanInformProbability,
       humanFightBackProbability = humanFightBackProbability,
+      entranceLaw = entranceLaw,
       humans = humans,
       zombieRunSpeed = zombieRunSpeed,
       zombiePerception = zombiePerception,
@@ -167,7 +164,6 @@ trait DSL {
       agents = generatedAgents,
       random = random)
   }
-
 
   type Army = simulation.Army
   type RedCross = simulation.RedCross
@@ -184,7 +180,7 @@ trait DSL {
     aggressive: Boolean = true) =
     simulation.Army(
       size,
-      fightBackProbability = 1.0,
+      fightBackProbability = fightBackProbability,
       exhaustionProbability = exhaustionProbability,
       perception = perception,
       runSpeed = runSpeed,
