@@ -102,7 +102,7 @@ object agent {
       space.neighbors(Index.get(index, _, _), x, y, neighborhoodSize).filter(n => distance(Agent.position(n), Agent.position(agent)) < range)
     }
 
-    def neighbors(index: Index[Agent], agent: Agent, range: Double, neighborhood: NeighborhoodCache) = {
+    def neighbors(index: Index[Agent], agent: Agent, range: Double, neighborhood: NeighborhoodCache): Array[Agent] = {
       val (x, y) = Agent.location(agent, index.side)
       neighborhood(x)(y).
         flatMap { case(x, y) => Index.get(index, x, y) }.
@@ -211,45 +211,46 @@ object agent {
     object EntranceLaw {
 
       def humanPoison(lambda: Double): EntranceLaw =
-        (l, world, simulation, agents, random) => {
-          val (x, y) = l
+        parameters => {
+
+          val (x, y) = parameters.entranceLocation
           val L = Math.exp(-lambda)
           var p = 1.0
           var k = 0
 
           do {
             k += 1
-            p *= random.nextDouble()
+            p *= parameters.random.nextDouble()
           } while (p > L)
 
           val enter = k - 1
 
-          val informed = random.nextDouble() < simulation.humanInformedRatio
-          val rescue = Rescue(informed = informed, informProbability = simulation.humanInformProbability)
+          val informed = parameters.random.nextDouble() < parameters.simulation.humanInformedRatio
+          val rescue = Rescue(informed = informed, informProbability = parameters.simulation.humanInformProbability)
 
           def human = Human.apply(
-            world,
-            walkSpeed = simulation.walkSpeed,
-            runSpeed = simulation.humanRunSpeed ,
-            exhaustionProbability = simulation.humanExhaustionProbability,
-            perception = simulation.humanPerception,
-            maxRotation = simulation.humanMaxRotation,
-            followRunningProbability = simulation.humanFollowProbability,
-            fight = Fight(simulation.humanFightBackProbability),
+            parameters.world,
+            walkSpeedParameter = parameters.simulation.walkSpeedParameter,
+            runSpeedParameter = parameters.simulation.humanRunSpeedParameter,
+            exhaustionProbability = parameters.simulation.humanExhaustionProbability,
+            perceptionParameter = parameters.simulation.humanPerceptionParameter,
+            maxRotation = parameters.simulation.humanMaxRotation,
+            followRunningProbability = parameters.simulation.humanFollowProbability,
+            fight = Fight(parameters.simulation.humanFightBackProbability),
             rescue = rescue,
             canLeave = true,
             function = Human.Civilian,
-            rng = random).copy(position = World.cellCenter(world, (x, y)))
+            rng = parameters.random).copy(position = World.cellCenter(parameters.world, (x, y)))
 
           (0 until enter).map(_ => human)
         }
 
+       case class Parameter(entranceLocation: Location, world: World, index: Index[Agent], neighborhoodCache: NeighborhoodCache, simulation: Simulation, agents: Seq[Agent], random: Random)
     }
 
-    type EntranceLaw = (Location, World, Simulation, Seq[Agent], Random) => Seq[Agent]
+    type EntranceLaw = EntranceLaw.Parameter => Seq[Agent]
 
-
-    def joining(world: World, simulation: Simulation, agents: Seq[Agent], random: Random) = {
+    def joining(world: World, index: Index[Agent], neighborhoodCache: NeighborhoodCache, simulation: Simulation, agents: Seq[Agent], random: Random) = {
 
       val join =
         for {
@@ -259,7 +260,9 @@ object agent {
         } yield c match {
           case c: Floor =>
             c.entrance match {
-              case HumanEntrance => simulation.entranceLaw((x, y), world, simulation, agents, random)
+              case HumanEntrance =>
+                val p = EntranceLaw.Parameter((x, y), world, index, neighborhoodCache, simulation, agents, random)
+                simulation.entranceLaw(p)
               case _ => Seq()
             }
           case _ => Seq()
@@ -525,10 +528,10 @@ object agent {
   object Human {
     def apply(
       world: World,
-      walkSpeed: Double,
-      runSpeed: Double,
+      walkSpeedParameter: Double,
+      runSpeedParameter: Double,
       exhaustionProbability: Double,
-      perception: Double,
+      perceptionParameter: Double,
       maxRotation: Double,
       followRunningProbability: Double,
       fight: Fight,
@@ -538,9 +541,23 @@ object agent {
       function: Function = Civilian,
       position: Option[Position] = None,
       rng: Random): Human = {
+
+      val cellSide = space.cellSide(world.side)
+
       val p = position getOrElse Agent.randomPosition(world, rng)
-      val v = Agent.randomVelocity(walkSpeed, rng)
-      Human(p, v, Metabolism(walkSpeed, runSpeed, exhaustionProbability, false, false), perception, maxRotation, followRunningProbability, fight, rescue = rescue, canLeave = canLeave, antidote = antidote, function = function)
+      val v = Agent.randomVelocity(walkSpeedParameter * cellSide, rng)
+      Human(
+        position = p,
+        velocity = v,
+        metabolism = Metabolism(walkSpeedParameter * cellSide, runSpeedParameter * cellSide, exhaustionProbability, false, false),
+        perception = perceptionParameter * cellSide,
+        maxRotation = maxRotation,
+        followRunningProbability = followRunningProbability,
+        fight = fight,
+        rescue = rescue,
+        canLeave = canLeave,
+        antidote = antidote,
+        function = function)
     }
 
     def run(h: Human) =
@@ -570,16 +587,28 @@ object agent {
   object Zombie {
     def apply(
       world: World,
-      walkSpeed: Double,
-      runSpeed: Double,
-      perception: Double,
+      walkSpeedParameter: Double,
+      runSpeedParameter: Double,
+      perceptionParameter: Double,
       maxRotation: Double,
       canLeave: Boolean,
       position: Option[Position] = None,
       random: Random): Zombie = {
+
+      val cellSide = space.cellSide(world.side)
+
       val p = position getOrElse Agent.randomPosition(world, random)
-      val v = Agent.randomVelocity(walkSpeed, random)
-      Zombie(p, v, walkSpeed, runSpeed, perception, maxRotation, pursuing = false, canLeave = canLeave)
+      val v = Agent.randomVelocity(walkSpeedParameter * cellSide, random)
+
+      Zombie(
+        position = p,
+        velocity = v,
+        walkSpeed = walkSpeedParameter * cellSide,
+        runSpeed = runSpeedParameter * cellSide,
+        perception = perceptionParameter * cellSide,
+        maxRotation,
+        pursuing = false,
+        canLeave = canLeave)
     }
 
     def pursue(z: Zombie) = z.copy(pursuing = true)

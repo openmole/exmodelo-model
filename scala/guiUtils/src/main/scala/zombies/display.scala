@@ -211,7 +211,7 @@ object display {
           step
         })
 
-        val (ns, ev) = _root_.zombies.simulation.step(stateNumberBuffer + 1, simulationBuffer, neighborhoodCache, rng)
+        val (ns, ev) = _root_.zombies.simulation.Simulation.step(stateNumberBuffer + 1, simulationBuffer, neighborhoodCache, rng)
         stepBuffer.update(Some(ns, eventBuffer ++ ev, stateNumberBuffer + 1, neighborhoodCache))
       case None => timeOut.now.foreach(to => timers.setTimeout(to) {
         step

@@ -2,7 +2,7 @@ package zombies
 
 import zombies.agent.Agent
 import zombies.agent.Agent.EntranceLaw
-import zombies.simulation.{ArmyOption, NoArmy, NoRedCross, RedCrossOption, Simulation}
+import zombies.simulation.{ArmyOption, NoArmy, NoRedCross, RedCrossOption }
 import zombies.space.{Location, Position}
 import zombies.world.World
 
@@ -26,6 +26,15 @@ import scala.util.Random
  */
 
 trait DSL {
+
+  type Location = zombies.space.Location
+
+  type World = zombies.world.World
+  type Agent = zombies.agent.Agent
+  val Agent = zombies.agent.Agent
+
+  type Simulation = zombies.simulation.Simulation
+  val Simulation = zombies.simulation.Simulation
 
   def physic = zombies.simulation.physic
 
@@ -87,7 +96,7 @@ trait DSL {
       agents = agents,
       random = random)
 
-    simulation.simulate(state, random, steps)
+    Simulation.simulate(state, random, steps)
   }
 
   def initialize(
@@ -211,7 +220,6 @@ trait DSL {
 
   def World(s: String) = zombies.world.World.parse()(s)
 
-
   object AgentGenerator {
 
     object Optional {
@@ -271,10 +279,10 @@ trait DSL {
 
         zombies.agent.Human(
           world = world,
-          walkSpeed = human.walkSpeed.getOrElse(walkSpeed) * cellSide,
-          runSpeed = human.runSpeed.getOrElse(humanRunSpeed) * cellSide,
+          walkSpeedParameter = human.walkSpeed.getOrElse(walkSpeed),
+          runSpeedParameter = human.runSpeed.getOrElse(humanRunSpeed),
           exhaustionProbability = human.exhaustionProbability.getOrElse(humanExhaustionProbability),
-          perception = human.perception.getOrElse(humanPerception) * cellSide,
+          perceptionParameter = human.perception.getOrElse(humanPerception),
           maxRotation = human.maxRotation.getOrElse(humanMaxRotation),
           followRunningProbability = human.followProbability.getOrElse(humanFollowProbability),
           fight = zombies.agent.Fight(human.fightBackProbability.getOrElse(humanFightBackProbability), aggressive = human.aggressive),
@@ -286,9 +294,9 @@ trait DSL {
       def generateZombie(zombie: Zombie) = {
         zombies.agent.Zombie(
           world = world,
-          walkSpeed = zombie.walkSpeed.getOrElse(walkSpeed) * cellSide,
-          runSpeed = zombie.runSpeed.getOrElse(zombieRunSpeed) * cellSide,
-          perception = zombie.perception.getOrElse(zombiePerception) * cellSide,
+          walkSpeedParameter = zombie.walkSpeed.getOrElse(walkSpeed),
+          runSpeedParameter = zombie.runSpeed.getOrElse(zombieRunSpeed),
+          perceptionParameter = zombie.perception.getOrElse(zombiePerception),
           maxRotation = zombie.maxRotation.getOrElse(zombieMaxRotation),
           canLeave = zombieCanLeave,
           random = random
@@ -336,12 +344,35 @@ trait DSL {
     maxRotation:  AgentGenerator.Optional[Double] = None,
     location:  AgentGenerator.Optional[Location] = None) extends AgentGenerator
 
+  def agent(simulation: Simulation, world: World, random: Random, generator: AgentGenerator) = {
+     AgentGenerator.generateAgent(
+        generator,
+        walkSpeed = simulation.walkSpeedParameter,
+        humanRunSpeed = simulation.humanRunSpeedParameter,
+        humanPerception = simulation.humanPerceptionParameter,
+        humanMaxRotation = simulation.humanMaxRotation,
+        humanExhaustionProbability = simulation.humanExhaustionProbability,
+        humanFollowProbability = simulation.humanFollowProbability,
+        humanInformedRatio = simulation.humanInformedRatio,
+        humanInformProbability = simulation.humanInformProbability,
+        humanFightBackProbability = simulation.humanFightBackProbability,
+        zombieRunSpeed = simulation.zombieRunSpeedParameter,
+        zombiePerception = simulation.zombiePerceptionParameter,
+        zombieMaxRotation = simulation.zombieMaxRotation,
+        zombieCanLeave = simulation.zombieCanLeave,
+        world = world,
+        random = random
+      )
+  }
+
   val CaptureTrap = world.CaptureTrap
   val DeathTrap = world.DeathTrap
 
   implicit class TrapDecorator(w: World) {
     def withTrap(t: (Location, world.Trap)*) = world.World.setTraps(w, t)
   }
+
+
 
 }
 

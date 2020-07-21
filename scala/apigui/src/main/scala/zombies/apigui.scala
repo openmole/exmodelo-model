@@ -1,5 +1,6 @@
 package zombies
 
+import zombies.agent.Agent.EntranceLaw
 import zombies.api._
 
 import scala.util.Random
@@ -31,8 +32,6 @@ object apigui {
     val rng = new Random(42)
 
     val agents =
-      (0 until 50).map(_ => Human(location = (7, 7))) ++
-        (0 until 50).map(_ => Human(location = (7, 7))) ++
         (0 to 5).map(_ => Zombie(location = (1, 9), runSpeed = 0.7)) ++
         (0 to 5).map(_ => Zombie(location = (1, 9), runSpeed = 0.2))
 
@@ -42,10 +41,12 @@ object apigui {
         zombies = 0,
         humans = 0,
         agents = agents,
-        random = rng
+        random = random
       )
 
-    display.init(() => init(rng), List.empty)
+    display.init(
+      () => init(rng),
+      List.empty)
   }
 
 }
