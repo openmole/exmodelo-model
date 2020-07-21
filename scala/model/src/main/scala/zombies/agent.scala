@@ -11,9 +11,9 @@ import scala.util.Random
 object agent {
 
   sealed trait Agent
-  case class Human(position: Position, velocity: Velocity, metabolism: Metabolism, perception: Double, maxRotation: Double, followRunningProbability: Double, fight: Fight, rescue: Rescue, canLeave: Boolean, antidote: AntidoteMechanism, function: Human.Function) extends Agent
-  case class Zombie(position: Position, velocity: Velocity, walkSpeed: Double, runSpeed: Double, perception: Double, maxRotation: Double, pursuing: Boolean, canLeave: Boolean) extends Agent
-  case class Metabolism(walkSpeed: Double, runSpeed: Double, exhaustionProbability: Double, run: Boolean, exhausted: Boolean)
+  case class Human(position: Position, velocity: Velocity, metabolism: Metabolism, relativePerception: Double, maxRotation: Double, followRunningProbability: Double, fight: Fight, rescue: Rescue, canLeave: Boolean, antidote: AntidoteMechanism, function: Human.Function) extends Agent
+  case class Zombie(position: Position, velocity: Velocity, walkSpeed: Double, relativeRunSpeed: Double, relativePerception: Double, maxRotation: Double, pursuing: Boolean, canLeave: Boolean) extends Agent
+  case class Metabolism(relativeWalkSpeed: Double, relativeRunSpeed: Double, exhaustionProbability: Double, run: Boolean, exhausted: Boolean)
 
   case class Rescue(informed: Boolean = false, alerted: Boolean = false, reach: Boolean = false, informProbability: Double = 0.0, noFollow: Boolean = false)
   case class Fight(fightBackProbability: Double, aggressive: Boolean = false)
@@ -68,8 +68,8 @@ object agent {
     }
 
     def perception(agent: Agent) = agent match {
-      case h: Human => h.perception
-      case z: Zombie => z.perception
+      case h: Human => h.relativePerception
+      case z: Zombie => z.relativePerception
     }
 
     def canLeave(agent: Agent) = agent match {
@@ -234,9 +234,9 @@ object agent {
           def human = Human.apply(
             parameters.world,
             walkSpeedParameter = parameters.simulation.walkSpeedParameter,
-            runSpeedParameter = parameters.simulation.humanRunSpeedParameter,
+            runSpeedParameter = parameters.simulation.humanRunSpeed,
             exhaustionProbability = parameters.simulation.humanExhaustionProbability,
-            perceptionParameter = parameters.simulation.humanPerceptionParameter,
+            perceptionParameter = parameters.simulation.humanPerception,
             maxRotation = parameters.simulation.humanMaxRotation,
             followRunningProbability = parameters.simulation.humanFollowProbability,
             fight = Fight(parameters.simulation.humanFightBackProbability),
@@ -248,12 +248,12 @@ object agent {
           (0 until enter).map(_ => human)
         }
 
-       case class Parameter(entranceLocation: Location, world: World, index: Index[Agent], neighborhoodCache: NeighborhoodCache, simulation: Simulation, agents: Seq[Agent], random: Random)
+       case class Parameter(entranceLocation: Location, world: World, index: Index[Agent], neighborhoodCache: NeighborhoodCache, simulation: Simulation, step: Int, agents: Seq[Agent], random: Random)
     }
 
     type EntranceLaw = EntranceLaw.Parameter => Seq[Agent]
 
-    def joining(world: World, index: Index[Agent], neighborhoodCache: NeighborhoodCache, simulation: Simulation, agents: Seq[Agent], random: Random) = {
+    def joining(world: World, index: Index[Agent], neighborhoodCache: NeighborhoodCache, simulation: Simulation, step: Int, agents: Seq[Agent], random: Random) = {
 
       val join =
         for {
@@ -264,7 +264,7 @@ object agent {
           case c: Floor =>
             c.entrance match {
               case HumanEntrance =>
-                val p = EntranceLaw.Parameter((x, y), world, index, neighborhoodCache, simulation, agents, random)
+                val p = EntranceLaw.Parameter((x, y), world, index, neighborhoodCache, simulation, step, agents, random)
                 simulation.entranceLaw(p)
               case _ => Seq()
             }
@@ -508,7 +508,7 @@ object agent {
 
 
   object Metabolism {
-    def effectiveSpeed(speed: Metabolism) =  if(speed.run) speed.runSpeed else speed.walkSpeed
+    def effectiveSpeed(speed: Metabolism) =  if(speed.run) speed.relativeRunSpeed else speed.relativeWalkSpeed
 
     def exhaustionProbability(metabolism: Metabolism, antidote: AntidoteMechanism) =
       antidote match {
@@ -553,7 +553,7 @@ object agent {
         position = p,
         velocity = v,
         metabolism = Metabolism(walkSpeedParameter * cellSide, runSpeedParameter * cellSide, exhaustionProbability, false, false),
-        perception = perceptionParameter * cellSide,
+        relativePerception = perceptionParameter * cellSide,
         maxRotation = maxRotation,
         followRunningProbability = followRunningProbability,
         fight = fight,
@@ -564,7 +564,7 @@ object agent {
     }
 
     def run(h: Human) =
-      if(Metabolism.canRun(h.metabolism)) h.copy(velocity = normalize(h.velocity, h.metabolism.runSpeed), metabolism = h.metabolism.copy(run = true))
+      if(Metabolism.canRun(h.metabolism)) h.copy(velocity = normalize(h.velocity, h.metabolism.relativeRunSpeed), metabolism = h.metabolism.copy(run = true))
       else h
 
     def isAlerted(h: Human) = h.rescue.alerted
@@ -607,8 +607,8 @@ object agent {
         position = p,
         velocity = v,
         walkSpeed = walkSpeedParameter * cellSide,
-        runSpeed = runSpeedParameter * cellSide,
-        perception = perceptionParameter * cellSide,
+        relativeRunSpeed = runSpeedParameter * cellSide,
+        relativePerception = perceptionParameter * cellSide,
         maxRotation,
         pursuing = false,
         canLeave = canLeave)
@@ -616,7 +616,7 @@ object agent {
 
     def pursue(z: Zombie) = z.copy(pursuing = true)
     def stopPursuit(z: Zombie) = z.copy(pursuing = false)
-    def speed(z: Zombie) = if(z.pursuing) z.runSpeed else z.walkSpeed
+    def speed(z: Zombie) = if(z.pursuing) z.relativeRunSpeed else z.walkSpeed
 
   }
 }

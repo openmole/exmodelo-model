@@ -30,7 +30,7 @@ object Test extends App {
     allEvents ++ events
   }
 
-  _root_.zombies.simulation.simulate(simulation, rng, 5000, display, List())
+  Simulation.simulate(simulation, rng, 5000, display, List())
 
   //println(_root_.zombies.simulation.simulate(simulation, rng, 500).humansDynamic(1).size)
  // println(_root_.zombies.simulation.simulate(simulation, rng, 500).humansDynamic(1).size)

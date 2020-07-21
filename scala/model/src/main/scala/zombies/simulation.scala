@@ -6,7 +6,7 @@ import zombies.agent.Agent.EntranceLaw
 
 import scala.util.Random
 
-package simulation {
+object simulation {
 
   object Event {
     def rescued : PartialFunction[Event, Rescued] = {
@@ -110,8 +110,6 @@ package simulation {
       agents: Seq[Agent] = Seq(),
       random: Random) = {
 
-      //val cellSide = space.cellSide(world.side)
-
       def generateHuman = {
         val informed = random.nextDouble() < humanInformedRatio
         val rescue = Rescue(informed = informed, informProbability = humanInformProbability)
@@ -199,17 +197,17 @@ package simulation {
       Simulation(
         world = world,
         agents = allAgents,
-        infectionRangeParameter = infectionRange,
-        humanRunSpeedParameter = humanRunSpeed,
-        humanPerceptionParameter = humanPerception,
+        infectionRange = infectionRange,
+        humanRunSpeed = humanRunSpeed,
+        humanPerception = humanPerception,
         humanMaxRotation = humanMaxRotation,
         humanExhaustionProbability = humanExhaustionProbability,
         humanFollowProbability = humanFollowProbability,
         humanFightBackProbability = humanFightBackProbability,
         humanInformedRatio = humanInformedRatio,
         humanInformProbability = humanInformProbability,
-        zombieRunSpeedParameter = zombieRunSpeed,
-        zombiePerceptionParameter = zombiePerception,
+        zombieRunSpeed = zombieRunSpeed,
+        zombiePerception = zombiePerception,
         zombieMaxRotation = zombieMaxRotation,
         zombieCanLeave = zombieCanLeave,
         walkSpeedParameter = walkSpeed,
@@ -223,7 +221,7 @@ package simulation {
     def step(step: Int, simulation: Simulation, neighborhoodCache: NeighborhoodCache, rng: Random) = {
       val index = Agent.index(simulation.agents, simulation.world.side)
       val w1 = Agent.releasePheromone(index, simulation.world, simulation.zombiePheromone)
-      val (ai, infected, died) = Agent.fight(w1, index, simulation.agents, simulation.infectionRange, Agent.zombify(_, _), rng)
+      val (ai, infected, died) = Agent.fight(w1, index, simulation.agents, simulation.relativeInfectionRange, Agent.zombify(_, _), rng)
 
       val (na1, moveEvents) =
         ai.map { a0 =>
@@ -249,7 +247,7 @@ package simulation {
 
       val (na2, rescued) = Agent.rescue(w1, na1.flatten)
 
-      val newAgents = Agent.joining(w1, index, neighborhoodCache, simulation, na2, rng)
+      val newAgents = Agent.joining(w1, index, neighborhoodCache, simulation, step, na2, rng)
 
       val events =
         infected.map(i => Zombified(i)) ++
@@ -260,8 +258,6 @@ package simulation {
       (simulation.copy(agents = na2 ++ newAgents, world = w1), events)
     }
 
-    type SimulationResult = (List[Simulation], List[Vector[Event]])
-
 
     def simulate(simulation: Simulation, rng: Random, steps: Int): SimulationResult = {
       def result(s: Simulation, events: Vector[Event], acc: SimulationResult) = (s :: acc._1, events :: acc._2)
@@ -271,7 +267,7 @@ package simulation {
     }
 
     def simulate[ACC](simulation: Simulation, rng: Random, steps: Int, accumulate: (Simulation, Vector[Event], ACC) => ACC, accumulator: ACC): ACC = {
-      val neighborhoodCache = World.visibleNeighborhoodCache(simulation.world, math.max(simulation.humanPerception, simulation.zombiePerception))
+      val neighborhoodCache = World.visibleNeighborhoodCache(simulation.world, math.max(simulation.relativeHumanPerception, simulation.relativeZombiePerception))
 
       def run0(s: Int, simulation: Simulation, events: Vector[Event], r: (Simulation, Vector[Event], ACC) => ACC, accumulator: ACC): ACC =
         if (s == 0) r(simulation, events, accumulator)
@@ -290,31 +286,30 @@ package simulation {
   case class Simulation(
     world: World,
     agents: Vector[Agent],
-    infectionRangeParameter: Double,
-    humanRunSpeedParameter: Double,
-    humanPerceptionParameter: Double,
+    infectionRange: Double,
+    humanRunSpeed: Double,
+    humanPerception: Double,
     humanMaxRotation: Double,
     humanExhaustionProbability: Double,
     humanFollowProbability: Double,
     humanFightBackProbability: Double,
     humanInformedRatio: Double,
     humanInformProbability: Double,
-    zombieRunSpeedParameter: Double,
-    zombiePerceptionParameter: Double,
+    zombieRunSpeed: Double,
+    zombiePerception: Double,
     zombieMaxRotation: Double,
     zombieCanLeave: Boolean,
     walkSpeedParameter: Double,
     zombiePheromone: PheromoneMechanism,
     rotationGranularity: Int,
     entranceLaw: EntranceLaw) {
-      val cellSide = space.cellSide(world.side)
-      val infectionRange = infectionRangeParameter * cellSide
-      val humanRunSpeed = humanRunSpeedParameter * cellSide
-      val humanPerception = humanPerceptionParameter * cellSide
-      val zombieRunSpeed = zombieRunSpeedParameter * cellSide
-      val zombiePerception = zombiePerceptionParameter * cellSide
-      val walkSpeed = walkSpeedParameter * cellSide
+      def cellSide = space.cellSide(world.side)
+      def relativeInfectionRange = infectionRange * cellSide
+      def relativeHumanPerception = humanPerception * cellSide
+      def relativeZombiePerception = zombiePerception * cellSide
   }
+
+  type SimulationResult = (List[Simulation], List[Vector[Event]])
 
 
   object environment {

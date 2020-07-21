@@ -221,7 +221,7 @@ object display {
     val setupButton = button("Setup", btn_default, onclick := { () =>
       val simulation = initFunction()
       val stepNumber = 0
-      val neighborhoodCache = World.visibleNeighborhoodCache(simulation.world, math.max(simulation.humanPerception, simulation.zombiePerception))
+      val neighborhoodCache = World.visibleNeighborhoodCache(simulation.world, math.max(simulation.relativeHumanPerception, simulation.relativeZombiePerception))
 
       stepBuffer.update(Some(simulation, List(), stepNumber, neighborhoodCache))
       stepState.update(Some(simulation, List(), stepNumber, neighborhoodCache))

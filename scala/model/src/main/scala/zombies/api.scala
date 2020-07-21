@@ -54,7 +54,7 @@ trait DSL {
     humanInformedRatio: Double = physic.humanInformedRatio,
     humanInformProbability: Double = physic.humanInformProbability,
     humanFightBackProbability: Double = physic.humanFightBackProbability,
-    humanEntranceLaw: EntranceLaw = EntranceLaw.humanPoison(physic.entranceLambda),
+    entrance: EntranceLaw = EntranceLaw.humanPoison(physic.entranceLambda),
     humans: Int = 250,
     zombieRunSpeed: Double = physic.zombieRunSpeed,
     zombiePerception: Double = physic.zombiePerception,
@@ -81,7 +81,7 @@ trait DSL {
       humanInformedRatio = humanInformedRatio,
       humanInformProbability = humanInformProbability,
       humanFightBackProbability = humanFightBackProbability,
-      entranceLaw = humanEntranceLaw,
+      entrance = entrance,
       humans = humans,
       zombieRunSpeed = zombieRunSpeed,
       zombiePerception = zombiePerception,
@@ -117,7 +117,7 @@ trait DSL {
     zombiePheromoneEvaporation: Double = physic.zombiePheromoneEvaporation,
     zombieCanLeave: Boolean = physic.zombieCanLeave,
     zombies: Int = 4,
-    entranceLaw: EntranceLaw = EntranceLaw.humanPoison(physic.entranceLambda),
+    entrance: EntranceLaw = EntranceLaw.humanPoison(physic.entranceLambda),
     walkSpeed: Double = physic.walkSpeed,
     rotationGranularity: Int = 5,
     army: ArmyOption = NoArmy,
@@ -158,7 +158,7 @@ trait DSL {
       humanInformedRatio = humanInformedRatio,
       humanInformProbability = humanInformProbability,
       humanFightBackProbability = humanFightBackProbability,
-      entranceLaw = entranceLaw,
+      entranceLaw = entrance,
       humans = humans,
       zombieRunSpeed = zombieRunSpeed,
       zombiePerception = zombiePerception,
@@ -315,8 +315,11 @@ trait DSL {
       }
     }
 
-
-
+    def modifyLocation(agentGenerator: AgentGenerator, l: Optional[Location] => Optional[Location]) =
+      agentGenerator match {
+        case h: Human => h.copy(location = l(h.location))
+        case z: Zombie => z.copy(location = l(z.location))
+      }
   }
 
   sealed trait AgentGenerator
@@ -347,20 +350,23 @@ trait DSL {
       Agent.around(_root_.zombies.world.World.cellCenter(e.world, e.entranceLocation), range * cellSide, e.index, e.neighborhoodCache).toVector
     }
 
+    def visible =
+      Agent.around(_root_.zombies.world.World.cellCenter(e.world, e.entranceLocation), e.simulation.relativeHumanPerception, e.index, e.neighborhoodCache).toVector
+
     def enter(generator: Iterable[AgentGenerator]) = generator.flatMap { generator =>
       AgentGenerator.generateAgent(
-        generator,
+        generator = AgentGenerator.modifyLocation(generator, l => Some(l.getOrElse(e.entranceLocation))),
         walkSpeed = e.simulation.walkSpeedParameter,
-        humanRunSpeed = e.simulation.humanRunSpeedParameter,
-        humanPerception = e.simulation.humanPerceptionParameter,
+        humanRunSpeed = e.simulation.humanRunSpeed,
+        humanPerception = e.simulation.humanPerception,
         humanMaxRotation = e.simulation.humanMaxRotation,
         humanExhaustionProbability = e.simulation.humanExhaustionProbability,
         humanFollowProbability = e.simulation.humanFollowProbability,
         humanInformedRatio = e.simulation.humanInformedRatio,
         humanInformProbability = e.simulation.humanInformProbability,
         humanFightBackProbability = e.simulation.humanFightBackProbability,
-        zombieRunSpeed = e.simulation.zombieRunSpeedParameter,
-        zombiePerception = e.simulation.zombiePerceptionParameter,
+        zombieRunSpeed = e.simulation.zombieRunSpeed,
+        zombiePerception = e.simulation.zombiePerception,
         zombieMaxRotation = e.simulation.zombieMaxRotation,
         zombieCanLeave = e.simulation.zombieCanLeave,
         world = e.world,

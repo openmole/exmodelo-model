@@ -14,17 +14,17 @@ object apigui {
     def world =
       World {
         "++++++++++++++\n" +
-        "+++++++e000000\n" +
-        "+++++++0000000\n" +
-        "+R000000000000\n" +
+        "+++++++e00000+\n" +
+        "+++++++000000+\n" +
+        "+R00000000000+\n" +
         "+R00000000++++\n" +
         "++++000000++++\n" +
         "++++DT0000++++\n" +
-        "0000000000++++\n" +
-        "0000000000++++\n" +
-        "0000000000++++\n" +
-        "0000000000++++\n" +
-        "++++0000TD++++\n" +
+        "+000000000++++\n" +
+        "+000000000++++\n" +
+        "+000000000++++\n" +
+        "+000000000++++\n" +
+        "++++0000DD++++\n" +
         "++++0000ee++++\n" +
         "++++++++++++++"
       }
@@ -38,9 +38,10 @@ object apigui {
 
     def entranceLaw: EntranceLaw = { context =>
       val humans = context.agents.filter(Agent.isHuman)
-      val zombiesAround = context.around(2.0).filter(Agent.isZombie)
-      val enter = if(zombiesAround.isEmpty) (humanPopulation - humans.size) / 3 else 0
-      val agents =  (0 until enter).map { i => Human(location = context.entranceLocation) }
+      val zombiesAround = context.visible.filter(Agent.isZombie)
+      val enterTime = context.step % 10 == 0
+      val enter = if(enterTime && zombiesAround.isEmpty) (humanPopulation - humans.size) / 3 else 0
+      val agents =  (0 until enter).map { i => Human() }
       context.enter(agents)
     }
 
@@ -50,7 +51,7 @@ object apigui {
         zombies = 0,
         humans = 0,
         agents = agents,
-        entranceLaw = entranceLaw,
+        entrance = entranceLaw,
         random = random
       )
 

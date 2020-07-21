@@ -1,6 +1,6 @@
 import zombies.agent.{Agent, PheromoneMechanism}
 import zombies.metrics.defaultGroupSize
-import zombies.simulation.{ArmyOption, NoArmy, NoRedCross, RedCrossOption, Simulation, SimulationResult}
+import zombies.simulation._
 import zombies.world.World
 
 package object zombies extends DSL {
