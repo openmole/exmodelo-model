@@ -41,6 +41,6 @@ Replication(
   evaluation = zombieModel,
   seed = seed,
   sample = 20,
-  aggregation = ()
+  aggregation = XXXXX
 ) hook (workDirectory / "replicated_output.csv")
 
