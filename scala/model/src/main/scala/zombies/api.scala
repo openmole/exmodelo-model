@@ -375,6 +375,8 @@ trait DSL {
     }.toVector
   }
 
+  def poison(lambda: Double, random: Random) = EntranceLaw.poison(lambda, random)
+
   val CaptureTrap = world.CaptureTrap
   val DeathTrap = world.DeathTrap
 

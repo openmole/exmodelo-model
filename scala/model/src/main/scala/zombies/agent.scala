@@ -214,16 +214,16 @@ object agent {
     object EntranceLaw {
 
       def poison(lambda: Double, random: Random) = {
-         val L = Math.exp(-lambda)
-          var p = 1.0
-          var k = 0
+        val L = Math.exp(-lambda)
+        var p = 1.0
+        var k = 0
 
-          do {
-            k += 1
-            p *= random.nextDouble()
-          } while (p > L)
+        do {
+          k += 1
+          p *= random.nextDouble()
+        } while (p > L)
 
-          k - 1
+        k - 1
       }
 
       def humanPoison(lambda: Double): EntranceLaw =
