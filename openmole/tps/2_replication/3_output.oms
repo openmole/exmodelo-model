@@ -40,7 +40,6 @@ val zombieModel =
 Replication(
   evaluation = zombieModel,
   seed = seed,
-  sample = 20,
-  aggregation = XXXXX
+  sample = 20
 ) hook (workDirectory / "replicated_output.csv")
 
