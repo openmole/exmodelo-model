@@ -9,6 +9,11 @@ val totalZombified = Val[Int]
 val peakTime = Val[Int]
 val peakSize = Val[Int]
 
+// Aggregation
+val zombifiedMed = Val[Double]
+val zombifiedAvg = Val[Double]
+val zombifiedMSE = Val[Double]
+
 // model execution Task
 val zombieModel =
   ScalaTask("""
