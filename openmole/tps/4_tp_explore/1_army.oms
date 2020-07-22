@@ -30,15 +30,7 @@ val model =
     plugins += pluginsOf[_root_.zombies.simulation.Simulation]
   )
 
-val agg = ScalaTask("""
-  val zombifiedMed = zombified.median
-  val zombifiedAvg = zombified.average
-  val zombifiedMSE = zombified.rootMeanSquaredError""") set (
-    inputs += zombified.array,
-    outputs += (zombifiedMed, zombifiedAvg, zombifiedMSE)
-  )
-
-val env = SLURMEnvironment("xxxx", "myria.criann.fr", queue = "2tcourt", wallTime = 20 minutes, nTasks = 1, memory = 2500, workDirectory = "/tmp", reservation = "exModelo0624")
+val env = SLURMEnvironment("xxxx", "myria.criann.fr", queue = "2tcourt", wallTime = 20 minutes, nTasks = 1, memory = 2500, workDirectory = "/tmp", reservation = "XXXX")
 
 Replication(
   evaluation = model,
