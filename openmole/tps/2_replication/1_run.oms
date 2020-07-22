@@ -11,16 +11,17 @@ val zombiesDynamic = Val[Array[Int]]
 val zombieModel =   ScalaTask("""
   import zombies._
 
-  val result = zombieInvasion(
-    zombies = 4,
-    humans = 250,
-    steps = 500,
-    world = jaude,
-    random = Random(seed),
-    humanFollowProbability = 1.0,
-    humanInformedRatio = 0.5,
-    humanInformProbability = 0.5 
-  )
+  val result = 
+    zombieInvasion(
+      zombies = 4,
+      humans = 250,
+      steps = 500,
+      world = jaude,
+      random = Random(seed),
+      humanFollowProbability = 1.0,
+      humanInformedRatio = 0.5,
+      humanInformProbability = 0.5 
+    )
 
   val zombiesDynamic = result.zombiesDynamic(20)
   val rescuedDynamic = result.rescuedDynamic(20)"""
