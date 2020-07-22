@@ -213,20 +213,23 @@ object agent {
 
     object EntranceLaw {
 
-      def humanPoison(lambda: Double): EntranceLaw =
-        parameters => {
-
-          val (x, y) = parameters.entranceLocation
-          val L = Math.exp(-lambda)
+      def poison(lambda: Double, random: Random) = {
+         val L = Math.exp(-lambda)
           var p = 1.0
           var k = 0
 
           do {
             k += 1
-            p *= parameters.random.nextDouble()
+            p *= random.nextDouble()
           } while (p > L)
 
-          val enter = k - 1
+          k - 1
+      }
+
+      def humanPoison(lambda: Double): EntranceLaw =
+        parameters => {
+          val (x, y) = parameters.entranceLocation
+          val enter = poison(lambda, parameters.random)
 
           val informed = parameters.random.nextDouble() < parameters.simulation.humanInformedRatio
           val rescue = Rescue(informed = informed, informProbability = parameters.simulation.humanInformProbability)
