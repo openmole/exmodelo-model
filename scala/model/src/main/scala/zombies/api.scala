@@ -202,7 +202,7 @@ trait DSL {
 
   def RedCross(
     size: Int,
-    exhaustionProbability: Option[Double] = None,
+    vaccinatedExhaustionProbability: Option[Double] = None,
     followProbability: Double = 0.0,
     informProbability: Double = physic.humanInformProbability,
     aggressive: Boolean = true,
@@ -210,7 +210,7 @@ trait DSL {
     efficiencyProbability: Double = 1.0) =
     simulation.RedCross(
       size,
-      exhaustionProbability = exhaustionProbability,
+      vaccinatedExhaustionProbability = vaccinatedExhaustionProbability,
       followProbability = followProbability,
       informProbability = informProbability,
       aggressive = aggressive,

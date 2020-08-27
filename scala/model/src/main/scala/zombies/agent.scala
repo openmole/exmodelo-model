@@ -29,7 +29,7 @@ object agent {
     def activated(antidote: Antidote) = antidote.activationDelay <= 0
   }
 
-  case class Antidote(activationDelay: Int, efficiencyProbability: Double, exhaustionProbability: Option[Double], taken: Boolean = false) extends AntidoteMechanism
+  case class Antidote(activationDelay: Int, efficiencyProbability: Double, vaccinatedExhaustionProbability: Option[Double], taken: Boolean = false) extends AntidoteMechanism
 
   object Agent {
 
@@ -515,7 +515,7 @@ object agent {
 
     def exhaustionProbability(metabolism: Metabolism, antidote: AntidoteMechanism) =
       antidote match {
-        case antidote: Antidote if antidote.taken && !Antidote.activated(antidote) => antidote.exhaustionProbability.getOrElse(metabolism.exhaustionProbability)
+        case antidote: Antidote if antidote.taken && !Antidote.activated(antidote) => antidote.vaccinatedExhaustionProbability.getOrElse(metabolism.exhaustionProbability)
         case _ => metabolism.exhaustionProbability
       }
 

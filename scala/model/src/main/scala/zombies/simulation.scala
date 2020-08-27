@@ -72,7 +72,7 @@ object simulation {
   case object NoRedCross extends RedCrossOption
   case class RedCross(
     size: Int,
-    exhaustionProbability: Option[Double] = None,
+    vaccinatedExhaustionProbability: Option[Double] = None,
     followProbability: Double = 0.0,
     informProbability: Double = physic.humanInformProbability,
     aggressive: Boolean = true,
@@ -164,7 +164,7 @@ object simulation {
 
       def generateRedCrossVolunteers(redCross: RedCross) = {
         val rescue = Rescue(informProbability = redCross.informProbability, noFollow = true)
-        val antidote = Antidote(activationDelay = redCross.activationDelay, efficiencyProbability = redCross.efficiencyProbability, exhaustionProbability = redCross.exhaustionProbability)
+        val antidote = Antidote(activationDelay = redCross.activationDelay, efficiencyProbability = redCross.efficiencyProbability, vaccinatedExhaustionProbability = redCross.vaccinatedExhaustionProbability)
         Human(
           world = world,
           walkSpeedParameter = walkSpeed,
