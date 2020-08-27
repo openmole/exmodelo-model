@@ -5,7 +5,7 @@ val humanFollowProbability = Val[Double]
 val humanInformedRatio = Val[Double]
 val humanInformProbability = Val[Double]
 
-val seed = Val[Long]
+val mySeed = Val[Long]
 
 // Model outputs
 val peakTime = Val[Double]
@@ -54,7 +54,7 @@ val model =
       spatialSlopeZombified
     ),
     
-    seed := 42,
+    mySeed := 42,
     
     plugins += pluginsOf[zombies.agent.Agent]
   )
@@ -62,9 +62,9 @@ val model =
 SensitivityMorris(
   evaluation = model,
   inputs = Seq(
-    humanFollowProbability in (0.0,1.0),
-    humanInformedRatio in (0.0,1.0),
-    humanInformProbability in (0.0,1.0)
+    humanFollowProbability in (0.0, 1.0),
+    humanInformedRatio in (0.0, 1.0),
+    humanInformProbability in (0.0, 1.0)
   ),
   outputs = Seq(
     peakTime,
@@ -78,5 +78,5 @@ SensitivityMorris(
   ),
   sample = 10,
   level = 5
-) hook (workDirectory / "moris")
+) hook (workDirectory / "morris")
 
