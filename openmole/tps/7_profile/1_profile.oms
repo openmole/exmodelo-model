@@ -1,7 +1,7 @@
 // Model parameters
 XXX
 
-val seed = Val[Long]
+val mySeed = Val[Long]
 
 // Output
 val rescuedDynamic = Val[Array[Int]]
@@ -17,7 +17,7 @@ val model =
   ScalaTask("""
     import zombies._
     
-    val rng = Random(seed)
+    val rng = Random(mySeed)
   
     val result = zombieInvasion(
       humanFollowProbability = XXX,
@@ -43,5 +43,5 @@ ProfileEvolution(
     nX = XXX,
     genome = XXX,
     termination = XXX,
-    stochastic = Stochastic(seed = seed)
+    stochastic = Stochastic(seed = mySeed)
   ) XXX
