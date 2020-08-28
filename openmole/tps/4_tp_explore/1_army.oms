@@ -30,7 +30,7 @@ val model =
     plugins += pluginsOf[_root_.zombies.simulation.Simulation]
   )
 
-val env = SLURMEnvironment("xxxx", "myria.criann.fr", queue = "2tcourt", wallTime = 20 minutes, nTasks = 1, memory = 2500, workDirectory = "/tmp", reservation = "XXXX")
+val env = SLURMEnvironment("xxxx", "myria.criann.fr", queue = "2tcourt", wallTime = 20 minutes, nTasks = 1, memory = 2500, workDirectory = "/tmp", reservation = "xModelo")
 
 Replication(
   evaluation = model,
