@@ -4,14 +4,14 @@ val humanInformProbability = Val[Double]
 
 val seed = Val[Long]
 val rescuedDynamic = Val[Array[Int]]
- 
-val averageData = Vector(0, 2.64, 17.66, 31.73, 34.97, 28.4, 16.06, 7.49, 3.96, 1.84, 0.69, 0.41, 0.23, 0.06, 0, 0.02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-  
- 
-def distance(data: Vector[Double])(vs: Vector[Array[Int]]) = {
-  val simulated = vs.transpose.map(_.map(_.toDouble).average)
-  absoluteDistance(data, simulated)
+
+// Fitness
+def distanceMedian(vs: Array[Array[Int]]): Double = {
+  val medianData = Array(0, 0, 5, 12.5, 21.5, 24, 22, 29, 19.5, 11, 6, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+  val simulated = vs.transpose.map(_.median)
+  absoluteDistance(medianData, simulated)
 }
+
 
 def profile(param: Val[Double]) = {
   val model =
@@ -39,7 +39,7 @@ def profile(param: Val[Double]) = {
   
   ProfileEvolution(
     evaluation = model,
-    objective = rescuedDynamic aggregate distance(averageData),
+    objective = rescuedDynamic aggregate distanceMedian,
     x = param,
     nX = 100,
     genome = Seq(
