@@ -2,7 +2,7 @@ val humanFollowProbability = Val[Double]
 val humanInformedRatio = Val[Double]
 val humanInformProbability = Val[Double]
 
-val seed = Val[Long]
+val mySeed = Val[Long]
 val rescuedDynamic = Val[Array[Int]]
 
 // Fitness
@@ -18,7 +18,7 @@ def profile(param: Val[Double]) = {
   ScalaTask("""
     import zombies._
     
-    val rng = Random(seed)
+    val rng = Random(mySeed)
   
     val result = zombieInvasion(
       humanFollowProbability = humanFollowProbability,
@@ -31,7 +31,7 @@ def profile(param: Val[Double]) = {
     
     val rescuedDynamic = result.rescuedDynamic()
   """) set (
-    inputs += (seed, humanFollowProbability, humanInformedRatio, humanInformProbability),
+    inputs += (mySeed, humanFollowProbability, humanInformedRatio, humanInformProbability),
     outputs += (rescuedDynamic),
     
     plugins += pluginsOf[zombies.agent.Agent]    
@@ -48,7 +48,7 @@ def profile(param: Val[Double]) = {
       humanFollowProbability in (0.0, 1.0)
     ),
     termination = 1000,
-    stochastic = Stochastic(seed = seed)
+    stochastic = Stochastic(seed = mySeed)
   ) hook (workDirectory / s"results/profile/${param.name}/", frequency = 100)
 }
 
