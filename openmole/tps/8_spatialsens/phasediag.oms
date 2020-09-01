@@ -1,0 +1,118 @@
+import zombies._
+
+val replication = Val[Int]
+val id = Val[Int]
+val worldid = Val[Int]
+
+// model parameters
+val humanFollowProbability = Val[Double]
+val humanInformedRatio = Val[Double]
+val humanInformProbability = Val[Double]
+
+// generator parameters
+val worldSize = 40
+
+val generatorType = Val[String]
+
+val expMixtureCenters = Val[Int]
+val expMixtureRadius = Val[Double]
+val expMixtureThreshold = Val[Double]
+
+val genworld = Val[Array[Array[Double]]]
+
+// outputs
+//val humansDynamic = Val[Array[Int]]
+//val zombiesDynamic = Val[Array[Int]]
+//val killedDynamic = Val[Array[Int]]
+val peakTime = Val[Double]
+val peakSize = Val[Double]
+val totalZombified = Val[Double]
+val halfZombified = Val[Double]
+val spatialMoranZombified = Val[Double]
+val spatialDistanceMeanZombified = Val[Double]
+val spatialEntropyZombified = Val[Double]
+val spatialSlopeZombified = Val[Double]
+
+
+val model =
+  ScalaTask("""
+    import zombies._
+    import zombies.worldgen._
+
+    val rng = new util.Random(replication)
+
+    val world = closeWorld(jaudifyDenseWorlds(genworld))
+
+    //val (_,_,_,moran,avgDistance,density,components,_,avgBlockArea,avgComponentArea,fullDilationSteps,fullErosionSteps) = Morphology(world).toTuple
+
+    val result = zombieInvasion(
+      world = world,
+      zombies = 4,
+      humans = 250,
+      steps = 500,
+      random = rng
+    )
+
+    //val humansDynamic = result.humansDynamic(20)
+    //val zombiesDynamic = result.zombiesDynamic(20)
+    //val rescuedDynamic = result.rescuedDynamic(20)
+    val peakTime = result.peakTimeZombified(window = 5).toDouble
+    val peakSize = result.peakSizeZombified(window = 5).toDouble
+    val totalZombified = result.totalZombified.toDouble
+    val halfZombified = result.halfZombified.toDouble
+    val spatialMoranZombified = result.spatialMoranZombified
+    val spatialDistanceMeanZombified = result.spatialDistanceMeanZombified
+    val spatialEntropyZombified = result.spatialEntropyZombified
+    val spatialSlopeZombified = result.spatialSlopeZombified
+  """) set (
+    (inputs,outputs) += (replication,id,worldid,generatorType),
+    //(inputs,outputs) += (infectionRange, humanRunSpeed, humanExhaustionProbability, humanFollowProbability, humanInformedRatio, humanInformProbability, humanFightBackProbability, humanPerception, humanMaxRotation, humans, zombieRunSpeed, zombiePheromoneEvaporation, zombiePerception, zombieMaxRotation, zombies),
+    (inputs,outputs) += (humanFollowProbability,humanInformedRatio,humanInformProbability),
+    (inputs,outputs) += (expMixtureCenters,expMixtureRadius,expMixtureThreshold),
+    inputs += (genworld),
+    //outputs += (humansDynamic, zombiesDynamic, killedDynamic, zombifiedDynamic, goneDynamic, fleeDynamic, pursueDynamic, rescuedDynamic),
+    outputs += (peakTime,peakSize,totalZombified,halfZombified
+    ,spatialMoranZombified,spatialDistanceMeanZombified,spatialEntropyZombified,spatialSlopeZombified),
+    plugins += pluginsOf[zombies.agent.Agent]
+  )
+
+
+//val purpose = "ONEFACTOR_SPATIALSENS_PHASEDIAG_GRID"
+val purpose = "GRIDCOOP_SPATIALSENS_PHASEDIAG_GRID"
+//val purpose = "TEST"
+
+//val env = EGIEnvironment("vo.complex-systems.eu")
+val env = LocalEnvironment(4)
+//val env = SLURMEnvironment("jraimb01","myria.criann.fr",
+ //   queue = "2tcourt",workDirectory = "/tmp",nTasks = 1,memory = 3 gigabytes,wallTime = 20 minutes)//,reservation="exmodelo0624")
+
+
+
+val indics_hook = CSVHook((workDirectory / "exploration" / (((new java.text.SimpleDateFormat("yyyyMMdd_HHmmss")).format(new java.util.Date()))+"_"+purpose+".csv")),arrayOnRow = true)
+
+val exploration = DirectSampling(
+  evaluation = (model on env by 50 hook indics_hook),
+  //evaluation = (model on env hook indics_hook),
+  sampling = (
+  (humanFollowProbability in (0.0 to 1.0 by 0.2))
+  x (humanInformedRatio in (0.0 to 1.0 by 0.2))
+  x (humanInformProbability in (0.0 to 1.0 by 0.2))
+  withIndex id ) x
+  (replication in (UniformDistribution[Int](10000) take 5))x
+  (((
+   (expMixtureCenters in (3 to 5)) x
+      (expMixtureRadius is 10.0) x
+      (expMixtureThreshold is 10.0) x
+      (genworld is ExpMixtureThresholdSpatialSampling(gridSize = 100,
+      center = expMixtureCenters, radius = expMixtureRadius, threshold = expMixtureThreshold))
+   x (generatorType is "expMixture"))
+ ) withIndex worldid)
+)
+
+
+
+
+
+exploration
+
+
