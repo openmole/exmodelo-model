@@ -44,6 +44,10 @@ object simulation {
     def trapped: PartialFunction[Event, Trapped] = {
       case e: Trapped => e
     }
+
+    def antidoteActivated: PartialFunction[Event, AntidoteActivated] = {
+      case e: AntidoteActivated => e
+    }
   }
 
   sealed trait Event
@@ -54,6 +58,7 @@ object simulation {
   case class FleeZombie(human: Human) extends Event
   case class PursueHuman(zombie: Zombie) extends Event
   case class Trapped(zombie: Zombie) extends Event
+  case class AntidoteActivated(human: Human) extends Event
 
   sealed trait ArmyOption
   case object NoArmy extends ArmyOption
@@ -97,13 +102,15 @@ object simulation {
             Agent.inform(ns, w1, rng) _ andThen
               Agent.alert(ns, rng) _ andThen
               Agent.takeAntidote _ andThen
+              Agent.getAntidote(ns, rng) _ andThen
               Agent.chooseRescue _ andThen
               Agent.run(ns) _ andThen
               Agent.metabolism(rng) _
 
           val a1 = evolve(a0)
 
-          val (a2, ev) = Agent.changeDirection(w1, simulation.rotationGranularity, ns, rng)(a1)
+          val (a2, ev1) = Agent.changeDirection(w1, simulation.rotationGranularity, ns, rng)(a1)
+          val ev = ev1 ++ Agent.observedEvents(a0, a2)
 
           Agent.move(w1, simulation.rotationGranularity, rng) (a2) match {
             case Some(a) => (Some(a), ev.toVector)
