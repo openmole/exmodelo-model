@@ -22,18 +22,18 @@ val spatialSlopeZombified = Val[Double]
 val model =
   ScalaTask("""
     import zombies._
-    
+
     val result = zombieInvasion(
       zombies = 4,
       humans = 250,
       steps = 500,
-      random = Random(seed),
-      
+      random = Random(mySeed),
+
       humanFollowProbability = humanFollowProbability,
       humanInformedRatio = humanInformedRatio,
       humanInformProbability = humanInformProbability
     )
-    
+
     val peakTime = result.peakTimeZombified(window = 5).toDouble
     val peakSize = result.peakSizeZombified(window = 5).toDouble
     val totalZombified = result.totalZombified.toDouble
@@ -53,9 +53,9 @@ val model =
       spatialEntropyZombified,
       spatialSlopeZombified
     ),
-    
+
     mySeed := 42,
-    
+
     plugins += pluginsOf[zombies.agent.Agent]
   )
 
@@ -79,4 +79,3 @@ SensitivityMorris(
   sample = 10,
   level = 5
 ) hook (workDirectory / "morris")
-
