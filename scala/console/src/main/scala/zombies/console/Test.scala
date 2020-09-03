@@ -15,7 +15,7 @@ object Test extends App {
   val rng = new Random(42)
 
   val world = World.jaude
-  val simulation = Simulation.initialize(
+  val simulation = api.initialize(
     environment.stadium,
     humans = humans,
     zombies = zombies,

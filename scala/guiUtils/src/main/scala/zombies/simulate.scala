@@ -56,7 +56,7 @@ object simulate {
         )
       }
 
-      Simulation.initialize(
+      api.initialize(
         world(controlList, rng),
         infectionRange = value(infectionRange),
         walkSpeed = value(walkSpeed),
