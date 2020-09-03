@@ -1,8 +1,8 @@
 package zombies
 
 import zombies.agent.Agent
-import zombies.agent.Agent.EntranceLaw
-import zombies.simulation.{ArmyOption, NoArmy, NoRedCross, RedCrossOption }
+import zombies.agent.Agent.{EntranceLaw, zombie}
+import zombies.simulation.{ArmyOption, NoArmy, NoRedCross, RedCrossOption}
 import zombies.space.{Location, Position}
 import zombies.world.World
 
@@ -125,6 +125,89 @@ trait DSL {
     agents: Seq[AgentGenerator] = Seq(),
     random: scala.util.Random) = {
 
+
+    def generateHuman = {
+      import _root_.zombies.agent._
+
+      val informed = random.nextDouble() < humanInformedRatio
+      val rescue = Rescue(informed = informed, informProbability = humanInformProbability)
+      _root_.zombies.agent.Human(
+        world = world,
+        walkSpeedParameter = walkSpeed,
+        runSpeedParameter = humanRunSpeed,
+        exhaustionProbability = humanExhaustionProbability,
+        perceptionParameter = humanPerception,
+        maxRotation = humanMaxRotation,
+        followRunningProbability = humanFollowProbability,
+        fight = Fight(humanFightBackProbability),
+        rescue = rescue,
+        canLeave = true,
+        function = _root_.zombies.agent.Human.Civilian,
+        rng = random)
+    }
+
+    def generateSoldier(army: Army) = {
+      import _root_.zombies.agent._
+      val rescue = Rescue(informed = true, alerted = true, informProbability = army.informProbability)
+      _root_.zombies.agent.Human(
+        world = world,
+        walkSpeedParameter = walkSpeed,
+        runSpeedParameter = army.runSpeed,
+        exhaustionProbability = army.exhaustionProbability,
+        perceptionParameter = army.perception,
+        maxRotation = army.maxRotation,
+        followRunningProbability = army.followProbability,
+        fight = Fight(army.fightBackProbability, aggressive = army.aggressive),
+        rescue = rescue,
+        canLeave = false,
+        function = _root_.zombies.agent.Human.Army,
+        rng = random)
+    }
+
+    def soldiers =
+      army match {
+        case NoArmy => Vector.empty
+        case a: Army => Vector.fill(a.size)(generateSoldier(a))
+      }
+
+    def generateZombie = {
+      _root_.zombies.agent.Zombie(
+        world = world,
+        walkSpeedParameter = walkSpeed,
+        runSpeedParameter = zombieRunSpeed,
+        perceptionParameter = zombiePerception,
+        maxRotation = zombieMaxRotation,
+        canLeave = zombieCanLeave,
+        random = random)
+    }
+
+    def generateRedCrossVolunteers(redCross: RedCross) = {
+      import _root_.zombies.agent._
+      val rescue = Rescue(informProbability = redCross.informProbability, noFollow = true)
+      val antidote = Antidote(activationDelay = redCross.activationDelay, efficiencyProbability = redCross.efficiencyProbability, vaccinatedExhaustionProbability = redCross.vaccinatedExhaustionProbability)
+      _root_.zombies.agent.Human(
+        world = world,
+        walkSpeedParameter = walkSpeed,
+        runSpeedParameter = humanRunSpeed,
+        exhaustionProbability = humanExhaustionProbability,
+        perceptionParameter = humanPerception,
+        maxRotation = humanMaxRotation,
+        followRunningProbability = redCross.followProbability,
+        fight = Fight(humanFightBackProbability, aggressive = redCross.aggressive),
+        rescue = rescue,
+        canLeave = false,
+        antidote = antidote,
+        function = _root_.zombies.agent.Human.RedCross,
+        rng = random)
+    }
+
+    def redCrossVolunteers =
+      redCross match {
+        case NoRedCross => Vector.empty
+        case a: RedCross => Vector.fill(a.size)(generateRedCrossVolunteers(a))
+      }
+
+
     val generatedAgents =
       agents.flatMap { a =>
         AgentGenerator.generateAgent(
@@ -147,38 +230,41 @@ trait DSL {
         )
       }
 
-    Simulation.initialize(
+    val allAgents =
+      Vector.fill(humans)(generateHuman) ++
+        Vector.fill(zombies)(generateZombie) ++
+        soldiers ++
+        redCrossVolunteers ++
+        generatedAgents
+
+    Simulation(
       world = world,
+      agents = allAgents,
       infectionRange = infectionRange,
       humanRunSpeed = humanRunSpeed,
       humanPerception = humanPerception,
       humanMaxRotation = humanMaxRotation,
       humanExhaustionProbability = humanExhaustionProbability,
       humanFollowProbability = humanFollowProbability,
+      humanFightBackProbability = humanFightBackProbability,
       humanInformedRatio = humanInformedRatio,
       humanInformProbability = humanInformProbability,
-      humanFightBackProbability = humanFightBackProbability,
-      entranceLaw = entrance,
-      humans = humans,
       zombieRunSpeed = zombieRunSpeed,
       zombiePerception = zombiePerception,
       zombieMaxRotation = zombieMaxRotation,
-      zombiePheromoneEvaporation = zombiePheromoneEvaporation,
       zombieCanLeave = zombieCanLeave,
-      zombies = zombies,
-      walkSpeed = walkSpeed,
+      walkSpeedParameter = walkSpeed,
+      zombiePheromone = _root_.zombies.agent.Pheromone(zombiePheromoneEvaporation),
       rotationGranularity = rotationGranularity,
-      army = army,
-      redCross = redCross,
-      agents = generatedAgents,
-      random = random)
+      entranceLaw = entrance
+    )
   }
 
   type Army = simulation.Army
   type RedCross = simulation.RedCross
 
   def Army(
-    size: Int,
+    size: Int = 1,
     fightBackProbability: Double = 1.0,
     exhaustionProbability: Double = physic.humanExhaustionProbability,
     perception: Double = physic.humanPerception,
@@ -201,7 +287,7 @@ trait DSL {
 
 
   def RedCross(
-    size: Int,
+    size: Int = 1,
     vaccinatedExhaustionProbability: Option[Double] = None,
     followProbability: Double = 0.0,
     informProbability: Double = physic.humanInformProbability,
@@ -300,6 +386,45 @@ trait DSL {
         )
       }
 
+      def generateSoldier(soldier: Soldier) = {
+        import _root_.zombies.agent._
+        val rescue = Rescue(informed = true, alerted = true, informProbability = soldier.informProbability)
+        _root_.zombies.agent.Human(
+          world = world,
+          walkSpeedParameter = walkSpeed,
+          runSpeedParameter = soldier.runSpeed.getOrElse(humanRunSpeed),
+          exhaustionProbability = soldier.exhaustionProbability.getOrElse(humanExhaustionProbability),
+          perceptionParameter = soldier.perception.getOrElse(humanPerception),
+          maxRotation = soldier.maxRotation.getOrElse(humanMaxRotation),
+          followRunningProbability = soldier.followProbability.getOrElse(humanFollowProbability),
+          fight = Fight(soldier.fightBackProbability, aggressive = soldier.aggressive),
+          rescue = rescue,
+          canLeave = false,
+          function = _root_.zombies.agent.Human.Army,
+          rng = random)
+      }
+
+      def generateVolunteers(volunteer: Volunteer) = {
+        import _root_.zombies.agent._
+        val rescue = Rescue(informProbability = volunteer.informProbability.getOrElse(humanInformProbability), noFollow = true)
+        val antidote = Antidote(activationDelay = volunteer.activationDelay, efficiencyProbability = volunteer.efficiencyProbability, vaccinatedExhaustionProbability = volunteer.vaccinatedExhaustionProbability.toOption)
+        _root_.zombies.agent.Human(
+          world = world,
+          walkSpeedParameter = walkSpeed,
+          runSpeedParameter = humanRunSpeed,
+          exhaustionProbability = humanExhaustionProbability,
+          perceptionParameter = humanPerception,
+          maxRotation = humanMaxRotation,
+          followRunningProbability = volunteer.followProbability.getOrElse(humanFollowProbability),
+          fight = Fight(humanFightBackProbability, aggressive = volunteer.aggressive),
+          rescue = rescue,
+          canLeave = false,
+          antidote = antidote,
+          function = _root_.zombies.agent.Human.RedCross,
+          rng = random)
+      }
+
+
       generator match {
         case human: Human =>
           human.location.toOption match {
@@ -311,6 +436,16 @@ trait DSL {
             case Some(l) => toPosition(l).map(l => generateZombie(zombie).copy(position = l))
             case None => Some(generateZombie(zombie))
           }
+        case soldier: Soldier =>
+          soldier.location.toOption match {
+            case Some(l) => toPosition(l).map(l => generateSoldier(soldier).copy(position = l))
+            case None => Some(generateSoldier(soldier))
+          }
+        case volunteer: Volunteer =>
+          volunteer.location.toOption match {
+            case Some(l) => toPosition(l).map(l => generateVolunteers(volunteer).copy(position = l))
+            case None => Some(generateVolunteers(volunteer))
+          }
 
       }
     }
@@ -319,10 +454,34 @@ trait DSL {
       agentGenerator match {
         case h: Human => h.copy(location = l(h.location))
         case z: Zombie => z.copy(location = l(z.location))
+        case v: Volunteer => v.copy(location = l(v.location))
+        case s: Soldier => s.copy(location = l(s.location))
       }
+
   }
 
   sealed trait AgentGenerator
+
+  case class Soldier(
+    fightBackProbability: Double = 1.0,
+    exhaustionProbability: AgentGenerator.Optional[Double] = None,
+    perception: AgentGenerator.Optional[Double] = None,
+    runSpeed: AgentGenerator.Optional[Double] = None,
+    followProbability: AgentGenerator.Optional[Double] = None,
+    maxRotation: AgentGenerator.Optional[Double] = None,
+    informProbability: Double = 0.0,
+    aggressive: Boolean = true,
+    location:  AgentGenerator.Optional[Location] = None) extends AgentGenerator
+
+  case class Volunteer(
+    vaccinatedExhaustionProbability: AgentGenerator.Optional[Double] = None,
+    followProbability: AgentGenerator.Optional[Double] = None,
+    informProbability: AgentGenerator.Optional[Double] = None,
+    aggressive: Boolean = true,
+    activationDelay: Int,
+    efficiencyProbability: Double,
+    location:  AgentGenerator.Optional[Location] = None) extends AgentGenerator
+
 
   case class Human(
     walkSpeed: AgentGenerator.Optional[Double] = None,

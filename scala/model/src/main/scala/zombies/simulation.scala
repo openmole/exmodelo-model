@@ -58,7 +58,7 @@ object simulation {
   sealed trait ArmyOption
   case object NoArmy extends ArmyOption
   case class Army(
-    size: Int,
+    size: Int = 1,
     fightBackProbability: Double = 1.0,
     exhaustionProbability: Double = physic.humanExhaustionProbability,
     perception: Double = physic.humanPerception,
@@ -71,7 +71,7 @@ object simulation {
   sealed trait RedCrossOption
   case object NoRedCross extends RedCrossOption
   case class RedCross(
-    size: Int,
+    size: Int = 1,
     vaccinatedExhaustionProbability: Option[Double] = None,
     followProbability: Double = 0.0,
     informProbability: Double = physic.humanInformProbability,
@@ -83,140 +83,6 @@ object simulation {
   case class HummanParameter()
 
   object Simulation {
-
-    def initialize(
-      world: World,
-      infectionRange: Double = physic.infectionRange,
-      humanRunSpeed: Double = physic.humanRunSpeed,
-      humanPerception: Double = physic.humanPerception,
-      humanMaxRotation: Double = physic.humanMaxRotation,
-      humanExhaustionProbability: Double = physic.humanExhaustionProbability,
-      humanFollowProbability: Double = physic.humanFollowProbability,
-      humanInformedRatio: Double = physic.humanInformedRatio,
-      humanInformProbability: Double = physic.humanInformProbability,
-      humanFightBackProbability: Double = physic.humanFightBackProbability,
-      humans: Int,
-      zombieRunSpeed: Double = physic.zombieRunSpeed,
-      zombiePerception: Double = physic.zombiePerception,
-      zombieMaxRotation: Double = physic.zombieMaxRotation,
-      zombiePheromoneEvaporation: Double = physic.zombiePheromoneEvaporation,
-      zombieCanLeave: Boolean = physic.zombieCanLeave,
-      zombies: Int,
-      walkSpeed: Double = physic.walkSpeed,
-      entranceLaw: EntranceLaw = EntranceLaw.humanPoison(physic.entranceLambda),
-      rotationGranularity: Int = 5,
-      army: ArmyOption = NoArmy,
-      redCross: RedCrossOption = NoRedCross,
-      agents: Seq[Agent] = Seq(),
-      random: Random) = {
-
-      def generateHuman = {
-        val informed = random.nextDouble() < humanInformedRatio
-        val rescue = Rescue(informed = informed, informProbability = humanInformProbability)
-        Human(
-          world = world,
-          walkSpeedParameter = walkSpeed,
-          runSpeedParameter = humanRunSpeed,
-          exhaustionProbability = humanExhaustionProbability,
-          perceptionParameter = humanPerception,
-          maxRotation = humanMaxRotation,
-          followRunningProbability = humanFollowProbability,
-          fight = Fight(humanFightBackProbability),
-          rescue = rescue,
-          canLeave = true,
-          function = Human.Civilian,
-          rng = random)
-      }
-
-      def generateZombie =
-        Zombie(
-          world = world,
-          walkSpeedParameter = walkSpeed,
-          runSpeedParameter = zombieRunSpeed,
-          perceptionParameter = zombiePerception,
-          maxRotation = zombieMaxRotation,
-          canLeave = zombieCanLeave,
-          random = random)
-
-
-      def generateSoldier(army: Army) = {
-        val rescue = Rescue(informed = true, alerted = true, informProbability = army.informProbability)
-        Human(
-          world = world,
-          walkSpeedParameter = walkSpeed,
-          runSpeedParameter = army.runSpeed,
-          exhaustionProbability = army.exhaustionProbability,
-          perceptionParameter = army.perception,
-          maxRotation = army.maxRotation,
-          followRunningProbability = army.followProbability,
-          fight = Fight(army.fightBackProbability, aggressive = army.aggressive),
-          rescue = rescue,
-          canLeave = false,
-          function = Human.Army,
-          rng = random)
-      }
-
-      def soldiers =
-        army match {
-          case NoArmy => Vector.empty
-          case a: Army => Vector.fill(a.size)(generateSoldier(a))
-        }
-
-      def generateRedCrossVolunteers(redCross: RedCross) = {
-        val rescue = Rescue(informProbability = redCross.informProbability, noFollow = true)
-        val antidote = Antidote(activationDelay = redCross.activationDelay, efficiencyProbability = redCross.efficiencyProbability, vaccinatedExhaustionProbability = redCross.vaccinatedExhaustionProbability)
-        Human(
-          world = world,
-          walkSpeedParameter = walkSpeed,
-          runSpeedParameter = humanRunSpeed,
-          exhaustionProbability = humanExhaustionProbability,
-          perceptionParameter = humanPerception,
-          maxRotation = humanMaxRotation,
-          followRunningProbability = redCross.followProbability,
-          fight = Fight(humanFightBackProbability, aggressive = redCross.aggressive),
-          rescue = rescue,
-          canLeave = false,
-          antidote = antidote,
-          function = Human.RedCross,
-          rng = random)
-      }
-
-      def redCrossVolunteers =
-        redCross match {
-          case NoRedCross => Vector.empty
-          case a: RedCross => Vector.fill(a.size)(generateRedCrossVolunteers(a))
-        }
-
-      val allAgents =
-        Vector.fill(humans)(generateHuman) ++
-          Vector.fill(zombies)(generateZombie) ++
-          soldiers ++
-          redCrossVolunteers ++
-          agents
-
-      Simulation(
-        world = world,
-        agents = allAgents,
-        infectionRange = infectionRange,
-        humanRunSpeed = humanRunSpeed,
-        humanPerception = humanPerception,
-        humanMaxRotation = humanMaxRotation,
-        humanExhaustionProbability = humanExhaustionProbability,
-        humanFollowProbability = humanFollowProbability,
-        humanFightBackProbability = humanFightBackProbability,
-        humanInformedRatio = humanInformedRatio,
-        humanInformProbability = humanInformProbability,
-        zombieRunSpeed = zombieRunSpeed,
-        zombiePerception = zombiePerception,
-        zombieMaxRotation = zombieMaxRotation,
-        zombieCanLeave = zombieCanLeave,
-        walkSpeedParameter = walkSpeed,
-        zombiePheromone = Pheromone(zombiePheromoneEvaporation),
-        rotationGranularity = rotationGranularity,
-        entranceLaw = entranceLaw
-      )
-
-    }
 
     def step(step: Int, simulation: Simulation, neighborhoodCache: NeighborhoodCache, rng: Random) = {
       val index = Agent.index(simulation.agents, simulation.world.side)
