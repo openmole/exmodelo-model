@@ -37,3 +37,4 @@ release/*
 *.snm
 *.synctex.gz
 *.toc
+.bsp/
