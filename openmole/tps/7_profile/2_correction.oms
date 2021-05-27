@@ -5,14 +5,6 @@ val humanInformProbability = Val[Double]
 val mySeed = Val[Long]
 val rescuedDynamic = Val[Array[Int]]
 
-// Fitness
-def distanceMedian(vs: Array[Array[Int]]): Double = {
-  val medianData = Array(0, 0, 5, 12.5, 21.5, 24, 22, 29, 19.5, 11, 6, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-  val simulated = vs.transpose.map(_.median)
-  absoluteDistance(medianData, simulated)
-}
-
-
 def profile(param: Val[Double]) = {
   val model =
   ScalaTask("""
@@ -39,9 +31,13 @@ def profile(param: Val[Double]) = {
   
   ProfileEvolution(
     evaluation = model,
-    objective = rescuedDynamic aggregate distanceMedian,
-    x = param,
-    nX = 100,
+    objective = Seq(
+      rescuedDynamic aggregate """
+        val medianData = Array(0, 0, 5, 12.5, 21.5, 24, 22, 29, 19.5, 11, 6, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        val simulated = rescuedDynamic.transpose.map(_.median)
+        absoluteDistance(medianData, simulated)
+      """),
+    profile = Seq(param),
     genome = Seq(
       humanInformedRatio in (0.0, 1.0),
       humanInformProbability in (0.0, 1.0),

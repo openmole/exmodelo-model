@@ -6,13 +6,6 @@ val mySeed = Val[Long]
 // Output
 val rescuedDynamic = Val[Array[Int]]
 
-// Fitness
-def distanceMedian(vs: Array[Array[Int]]): Double = {
-  val medianData = Array(0, 0, 5, 12.5, 21.5, 24, 22, 29, 19.5, 11, 6, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-  val simulated = vs.transpose.map(_.median)
-  absoluteDistance(medianData, simulated)
-}
-
 val model =
   ScalaTask("""
     import zombies._
@@ -39,8 +32,7 @@ val model =
 ProfileEvolution(
     evaluation = XXX,
     objective = XXX,
-    x = XXX,
-    nX = XXX,
+    profile = XXX,
     genome = XXX,
     termination = XXX,
     stochastic = Stochastic(seed = mySeed)
