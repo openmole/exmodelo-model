@@ -1,0 +1,39 @@
+// Model parameters
+XXX
+
+val mySeed = Val[Long]
+
+// Output
+val rescuedDynamic = Val[Array[Int]]
+
+val model =
+  ScalaTask("""
+    import zombies._
+    
+    val rng = Random(mySeed)
+  
+    val result = zombieInvasion(
+      humanFollowProbability = XXX,
+      humanInformedRatio = XXX,
+      humanInformProbability = XXX,
+      zombies = 4,
+      humans = 250,
+      steps = 500,
+      random = rng)
+    
+    val rescuedDynamic = result.rescuedDynamic()
+  """) set (
+    inputs += (XXX),
+    outputs += (XXX),
+    
+    plugins += pluginsOf[zombies.agent.Agent]    
+  )
+  
+ProfileEvolution(
+    evaluation = XXX,
+    objective = XXX,
+    profile = XXX,
+    genome = XXX,
+    termination = XXX,
+    stochastic = Stochastic(seed = mySeed)
+  ) XXX

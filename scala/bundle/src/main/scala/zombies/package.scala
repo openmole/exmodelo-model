@@ -1,6 +1,6 @@
 import zombies.agent.{Agent, PheromoneMechanism}
 import zombies.metrics.defaultGroupSize
-import zombies.simulation.{ArmyOption, NoArmy, NoRedCross, RedCrossOption, Simulation, SimulationResult}
+import zombies.simulation._
 import zombies.world.World
 
 package object zombies extends DSL {
@@ -38,6 +38,9 @@ package object zombies extends DSL {
     def halfZombified= metrics.halfTimeZombified(results)
     def peakTimeZombified(window: Int = defaultGroupSize) = metrics.peakTimeZombified(results, window)
     def peakSizeZombified(window: Int = defaultGroupSize) = metrics.peakSizeZombified(results, window)
+
+    def totalZombiesKilled = metrics.totalZombiesKilled(results)
+    def totalAntidoteActivated = metrics.totalAntidoteActivated(results)
 
     // spatial observables
     def spatialMoranZombified: Double = metrics.spatialMoran(metrics.zombified)(results)

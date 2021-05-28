@@ -1,0 +1,52 @@
+val humanFollowProbability = Val[Double]
+val humanInformedRatio = Val[Double]
+val humanInformProbability = Val[Double]
+
+val seed = Val[Long]
+val rescuedDynamic = Val[Array[Int]]
+
+val env = SLURMEnvironment("XXXX", "myria.criann.fr", queue = "knl", wallTime = 20 minutes, nTasks = 1, memory = 2500)
+
+val model =
+  ScalaTask("""
+    import zombies._
+    
+    val rng = Random(seed)
+  
+    val result = zombieInvasion(
+      humanFollowProbability = humanFollowProbability,
+      humanInformedRatio = humanInformedRatio,
+      humanInformProbability = humanInformProbability,
+      zombies = 1,
+      humans = 250,
+      steps = 500,
+      random = rng)
+    
+    val rescuedDynamic = result.rescuedDynamic()
+  """) set (
+    inputs += (seed, humanFollowProbability, humanInformedRatio, humanInformProbability),
+    outputs += (rescuedDynamic),
+    plugins += pluginsOf[zombies.agent.Agent]    
+  )
+  
+NSGA2Evolution(
+  evaluation = model,
+  genome = Seq(
+    humanInformedRatio in (0.0, 1.0),
+    humanInformProbability in (0.0, 1.0),
+    humanFollowProbability in (0.0, 1.0)
+  ),
+  objective = Seq(
+    rescuedDynamic aggregate """
+      val medianData = Array(0, 0, 5, 12.5, 21.5, 24, 22, 29, 19.5, 11, 6, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+      val simulated = rescuedDynamic.transpose.map(_.median)
+      absoluteDistance(medianData, simulated)
+    """),
+  termination = 100000,
+  parallelism = 500,
+  distribution = Island(5 minutes),
+  stochastic = Stochastic(seed = seed)
+) hook (workDirectory / "results", frequency = 100) on env
+
+
+

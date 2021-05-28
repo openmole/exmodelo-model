@@ -1,0 +1,52 @@
+val humanFollowProbability = Val[Double]
+val humanInformedRatio = Val[Double]
+val humanInformProbability = Val[Double]
+
+val seed = Val[Long]
+val rescuedDynamic = Val[Array[Int]]
+
+def distanceAVG(vs: Array[Array[Int]]): Double = {
+  val averageData = Vector (0, 0.87, 5.87, 14.13, 21.15, 25.47, 27.52, 28.15, 20.96, 12.66, 7.23, 5.24, 3.05, 2.08, 1.2, 0.84, 0.36, 0.15, 0.19, 0.15, 0.1, 0.03, 0.03, 0.02, 0, 0)
+  val simulated = vs.transpose.map(_.average)
+  absoluteDistance(averageData, simulated)
+}
+
+val env = EGIEnvironment("vo.complex-systems.eu")
+
+val model =
+  ScalaTask("""
+    import zombies._
+    
+    val rng = Random(seed)
+  
+    val result = zombieInvasion(
+      humanFollowProbability = humanFollowProbability,
+      humanInformedRatio = humanInformedRatio,
+      humanInformProbability = humanInformProbability,
+      zombies = 1,
+      humans = 250,
+      steps = 500,
+      random = rng)
+    
+    val rescuedDynamic = result.rescuedDynamic()
+  """) set (
+    inputs += (seed, humanFollowProbability, humanInformedRatio, humanInformProbability),
+    outputs += (rescuedDynamic),
+    plugins += pluginsOf[zombies.agent.Agent]    
+  )
+  
+NSGA2Evolution(
+  evaluation = model,
+  genome = Seq(
+    humanInformedRatio in (0.0, 1.0),
+    humanInformProbability in (0.0, 1.0),
+    humanFollowProbability in (0.0, 1.0)
+  ),
+  objective = Seq(rescuedDynamic aggregate distanceAVG),
+  termination = 100000,
+  parallelism = 500,
+  distribution = Island(5 minutes),
+  stochastic = Stochastic(seed = seed)
+) hook (workDirectory / "results/", frequency = 100) on env
+
+

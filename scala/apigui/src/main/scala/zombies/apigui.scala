@@ -1,5 +1,6 @@
 package zombies
 
+import zombies.agent.Agent.EntranceLaw
 import zombies.api._
 
 import scala.util.Random
@@ -13,28 +14,36 @@ object apigui {
     def world =
       World {
         "++++++++++++++\n" +
-        "+++++++e000000\n" +
-        "+++++++0000000\n" +
-        "+0000000000000\n" +
-        "+000000000++++\n" +
+        "+++++++e00000+\n" +
+        "+++++++000000+\n" +
+        "+R00000000000+\n" +
+        "+R00000000++++\n" +
         "++++000000++++\n" +
-        "++++DTRR00++++\n" +
-        "0000000000++++\n" +
-        "0000000000++++\n" +
-        "0000000000++++\n" +
-        "0000000000++++\n" +
-        "++++0000TD++++\n" +
+        "++++DT0000++++\n" +
+        "+000000000++++\n" +
+        "+000000000++++\n" +
+        "+000000000++++\n" +
+        "+000000000++++\n" +
+        "++++0000DD++++\n" +
         "++++0000ee++++\n" +
         "++++++++++++++"
       }
 
     val rng = new Random(42)
+    val humanPopulation = 60
 
     val agents =
-      (0 until 50).map(_ => Human(location = (7, 7))) ++
-        (0 until 50).map(_ => Human(location = (7, 7))) ++
         (0 to 5).map(_ => Zombie(location = (1, 9), runSpeed = 0.7)) ++
         (0 to 5).map(_ => Zombie(location = (1, 9), runSpeed = 0.2))
+
+    def entranceLaw: EntranceLaw = { context =>
+      val humans = context.agents.filter(Agent.isHuman)
+      val zombiesAround = context.visible.filter(Agent.isZombie)
+      val enterTime = context.step % 10 == 0
+      val enter = if(enterTime && zombiesAround.isEmpty) (humanPopulation - humans.size) / 3 else 0
+      val agents =  (0 until enter).map { i => Human() }
+      context.enter(agents)
+    }
 
     def init(random: Random) =
       initialize(
@@ -42,10 +51,13 @@ object apigui {
         zombies = 0,
         humans = 0,
         agents = agents,
-        random = rng
+        entrance = entranceLaw,
+        random = random
       )
 
-    display.init(() => init(rng), List.empty)
+    display.init(
+      () => init(rng),
+      List.empty)
   }
 
 }

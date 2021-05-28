@@ -1,0 +1,44 @@
+val seed = Val[Long]
+
+val armySize = Val[Int]
+
+val zombified = Val[Int]
+
+val zombifiedMed = Val[Double]
+val zombifiedAvg = Val[Double]
+val zombifiedMSE = Val[Double]
+
+val model =
+  ScalaTask("""
+    import zombies._
+    
+    val army = Army(size = armySize)
+  
+    val result = zombieInvasion(
+      zombies = 4,
+      humans = 250,
+      army = army,
+      steps = 500,
+      random = Random(seed)
+    )
+      
+    val zombified = result.totalZombified
+  """) set (
+    inputs += (seed, armySize),
+    outputs += (zombified),
+    armySize := 10,
+    plugins += pluginsOf[_root_.zombies.simulation.Simulation]
+  )
+
+val env = SLURMEnvironment("xxxx", "myria.criann.fr", queue = "2tcourt", wallTime = 20 minutes, nTasks = 1, memory = 2500, workDirectory = "/tmp", reservation = "xModelo")
+
+Replication(
+  evaluation = model,
+  seed = seed,
+  sample = 100,
+  aggregation = Seq(
+    zombified aggregate median as zombifiedMed, 
+    zombified aggregate average as zombifiedAvg,
+    zombified aggregate rootMeanSquaredError as zombifiedMSE
+  )
+) on env by 100 hook (workDirectory / "result.csv")

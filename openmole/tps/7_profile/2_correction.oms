@@ -1,0 +1,51 @@
+val humanFollowProbability = Val[Double]
+val humanInformedRatio = Val[Double]
+val humanInformProbability = Val[Double]
+
+val mySeed = Val[Long]
+val rescuedDynamic = Val[Array[Int]]
+
+def profile(param: Val[Double]) = {
+  val model =
+  ScalaTask("""
+    import zombies._
+    
+    val rng = Random(mySeed)
+  
+    val result = zombieInvasion(
+      humanFollowProbability = humanFollowProbability,
+      humanInformedRatio = humanInformedRatio,
+      humanInformProbability = humanInformProbability,
+      zombies = 4,
+      humans = 250,
+      steps = 500,
+      random = rng)
+    
+    val rescuedDynamic = result.rescuedDynamic()
+  """) set (
+    inputs += (mySeed, humanFollowProbability, humanInformedRatio, humanInformProbability),
+    outputs += (rescuedDynamic),
+    
+    plugins += pluginsOf[zombies.agent.Agent]    
+  )
+  
+  ProfileEvolution(
+    evaluation = model,
+    objective = Seq(
+      rescuedDynamic aggregate """
+        val medianData = Array(0, 0, 5, 12.5, 21.5, 24, 22, 29, 19.5, 11, 6, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        val simulated = rescuedDynamic.transpose.map(_.median)
+        absoluteDistance(medianData, simulated)
+      """),
+    profile = Seq(param),
+    genome = Seq(
+      humanInformedRatio in (0.0, 1.0),
+      humanInformProbability in (0.0, 1.0),
+      humanFollowProbability in (0.0, 1.0)
+    ),
+    termination = 1000,
+    stochastic = Stochastic(seed = mySeed)
+  ) hook (workDirectory / s"results/profile/${param.name}/", frequency = 100)
+}
+
+EmptyTask() -- (profile(humanFollowProbability), profile(humanInformedRatio), profile(humanInformProbability))

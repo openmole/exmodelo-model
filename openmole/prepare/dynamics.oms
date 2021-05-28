@@ -1,0 +1,33 @@
+import zombies._
+
+
+// Model inputs
+val seed = Val[Long]
+
+// Model outputs
+val rescuedDynamic = Val[Array[Int]]
+
+// model execution Task
+val zombieModel =   ScalaTask("""
+  import zombies._
+
+  val result = zombieInvasion(
+    zombies = 1,
+    humans = 250,
+    steps = 500,
+    random = Random(seed)
+  )
+
+  val rescuedDynamic = result.rescuedDynamic()"""
+) set (
+  inputs += (seed),
+  outputs += (rescuedDynamic),
+  plugins += pluginsOf[zombies.agent.Agent]
+)
+
+Replication(
+  evaluation = zombieModel,
+  seed = seed,
+  sample = 100
+) hook (workDirectory / "dynamics.csv")
+

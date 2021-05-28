@@ -2,6 +2,7 @@ package zombies
 
 import zombies.world.World
 
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
 import scala.scalajs.js.annotation._
@@ -10,7 +11,7 @@ import scala.util.Random
 @JSExportTopLevel("space")
 object space {
 
-  def neighbors[T](get: (Int, Int) => Traversable[T], x: Int, y: Int, neighborhoodSize: Int, center: Boolean = true) = {
+  def neighbors[T](get: (Int, Int) => Iterable[T], x: Int, y: Int, neighborhoodSize: Int, center: Boolean = true) = {
     val res = ListBuffer[T]()
 
     for {
@@ -29,7 +30,7 @@ object space {
   def distance(x1: (Double, Double), x2: (Double, Double)) =
     math.sqrt(math.pow(x1._1 - x2._1, 2) + math.pow(x1._2 - x2._2, 2))
 
-  def closest[T](t: T, v: Traversable[T], position: T => Position) =
+  def closest[T](t: T, v: Iterable[T], position: T => Position) =
     v.minBy(v => distance(position(t), position(v)))
 
   def direction(x1: (Double, Double), x2: (Double, Double)) =
@@ -86,6 +87,8 @@ object space {
 
   def randomUnitVector(rng: Random) = (rng.nextDouble(), rng.nextDouble())
 
+
+
   def positionToLocation(v: Position, side: Int): Location = {
     val (x, y) = v
     ((side * x).toInt, (side * y).toInt)
@@ -109,7 +112,7 @@ object space {
 
     def get[T](index: Index[T], x: Int, y: Int) =
       if(x > 0 && x < index.side && y > 0 && y < index.side) index.cells(x)(y).toTraversable
-      else Traversable.empty
+      else Iterable.empty
 
 
   }

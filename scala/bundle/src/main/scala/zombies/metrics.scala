@@ -1,8 +1,8 @@
 package zombies
 
 import org.apache.commons.math3.linear.MatrixUtils
-import zombies.agent.{Agent, Metabolism}
-import zombies.simulation.{Event, SimulationResult}
+import zombies.agent._
+import zombies.simulation._
 import zombies.space.Position
 
 import scala.math._
@@ -92,7 +92,7 @@ object metrics {
     val (simulation, events) = results
     val cellSide = space.cellSide(simulation.head.world.side)
     def filter(h: agent.Human) = {
-      val r = runSpeed.map(f => f(h.metabolism.runSpeed / cellSide)).getOrElse(true)
+      val r = runSpeed.map(f => f(h.metabolism.relativeRunSpeed / cellSide)).getOrElse(true)
       val i = informProbability.map(f => f(h.rescue.informProbability)).getOrElse(true)
       r && i
     }
@@ -130,6 +130,9 @@ object metrics {
   def halfTimeZombified(results: SimulationResult) = halfTimeEvents(results, Event.zombified)
   def peakTimeZombified(results: SimulationResult, window: Int = defaultGroupSize) = peakTimeEvents(results, window, Event.zombified)
   def peakSizeZombified(results: SimulationResult, window: Int = defaultGroupSize) = peakSizeEvents(results, window, Event.zombified)
+
+  def totalZombiesKilled(results: SimulationResult) = totalEvents(results, Event.killed)
+  def totalAntidoteActivated(results: SimulationResult) = totalEvents(results, Event.antidoteActivated)
 
   private def agentsDynamic(results : SimulationResult, by: Int, e: PartialFunction[Agent, Any]) = {
     val (simulations, _) = results

@@ -2,6 +2,7 @@ package zombies
 
 import agent._
 import world._
+import zombies.agent.Agent.EntranceLaw
 
 import scala.util.Random
 
@@ -43,6 +44,10 @@ object simulation {
     def trapped: PartialFunction[Event, Trapped] = {
       case e: Trapped => e
     }
+
+    def antidoteActivated: PartialFunction[Event, AntidoteActivated] = {
+      case e: AntidoteActivated => e
+    }
   }
 
   sealed trait Event
@@ -53,11 +58,12 @@ object simulation {
   case class FleeZombie(human: Human) extends Event
   case class PursueHuman(zombie: Zombie) extends Event
   case class Trapped(zombie: Zombie) extends Event
+  case class AntidoteActivated(human: Human) extends Event
 
   sealed trait ArmyOption
   case object NoArmy extends ArmyOption
   case class Army(
-    size: Int,
+    size: Int = 1,
     fightBackProbability: Double = 1.0,
     exhaustionProbability: Double = physic.humanExhaustionProbability,
     perception: Double = physic.humanPerception,
@@ -70,153 +76,83 @@ object simulation {
   sealed trait RedCrossOption
   case object NoRedCross extends RedCrossOption
   case class RedCross(
-    size: Int,
-    exhaustionProbability: Option[Double] = None,
+    size: Int = 1,
+    vaccinatedExhaustionProbability: Option[Double] = None,
     followProbability: Double = 0.0,
     informProbability: Double = physic.humanInformProbability,
     aggressive: Boolean = true,
     activationDelay: Int,
     efficiencyProbability: Double) extends RedCrossOption
 
+
+  case class HummanParameter()
+
   object Simulation {
 
-    def initialize(
-      world: World,
-      infectionRange: Double = physic.infectionRange,
-      demographicEntranceRate: Boolean = false,
-      entranceLambda: Double = physic.entranceLambda,
-      humanRunSpeed: Double = physic.humanRunSpeed,
-      humanPerception: Double = physic.humanPerception,
-      humanMaxRotation: Double = physic.humanMaxRotation,
-      humanExhaustionProbability: Double = physic.humanExhaustionProbability,
-      humanFollowProbability: Double = physic.humanFollowProbability,
-      humanInformedRatio: Double = physic.humanInformedRatio,
-      humanInformProbability: Double = physic.humanInformProbability,
-      humanFightBackProbability: Double = physic.humanFightBackProbability,
-      humans: Int,
-      zombieRunSpeed: Double = physic.zombieRunSpeed,
-      zombiePerception: Double = physic.zombiePerception,
-      zombieMaxRotation: Double = physic.zombieMaxRotation,
-      zombiePheromoneEvaporation: Double = physic.zombiePheromoneEvaporation,
-      zombieCanLeave: Boolean = physic.zombieCanLeave,
-      zombies: Int,
-      walkSpeed: Double = physic.walkSpeed,
-      rotationGranularity: Int = 5,
-      army: ArmyOption = NoArmy,
-      redCross: RedCrossOption = NoRedCross,
-      agents: Seq[Agent] = Seq(),
-      random: Random) = {
+    def step(step: Int, simulation: Simulation, neighborhoodCache: NeighborhoodCache, rng: Random) = {
+      val index = Agent.index(simulation.agents, simulation.world.side)
+      val w1 = Agent.releasePheromone(index, simulation.world, simulation.zombiePheromone)
+      val (ai, infected, died) = Agent.fight(w1, index, simulation.agents, simulation.relativeInfectionRange, Agent.zombify(_, _), rng)
 
-      val cellSide = space.cellSide(world.side)
+      val (na1, moveEvents) =
+        ai.map { a0 =>
+          val ns = Agent.neighbors(index, a0, Agent.perception(a0), neighborhoodCache)
 
-      def generateHuman = {
-        val informed = random.nextDouble() < humanInformedRatio
-        val rescue = Rescue(informed = informed, informProbability = humanInformProbability)
-        Human(
-          world = world,
-          walkSpeed = walkSpeed * cellSide,
-          runSpeed = humanRunSpeed * cellSide,
-          exhaustionProbability = humanExhaustionProbability,
-          perception = humanPerception * cellSide,
-          maxRotation = humanMaxRotation,
-          followRunningProbability = humanFollowProbability,
-          fight = Fight(humanFightBackProbability),
-          rescue = rescue,
-          canLeave = true,
-          function = Human.Civilian,
-          rng = random)
-      }
+          val evolve =
+            Agent.inform(ns, w1, rng) _ andThen
+              Agent.alert(ns, rng) _ andThen
+              Agent.takeAntidote _ andThen
+              Agent.getAntidote(ns, rng) _ andThen
+              Agent.chooseRescue _ andThen
+              Agent.run(ns) _ andThen
+              Agent.metabolism(rng) _
 
-      def generateZombie =
-        Zombie(
-          world = world,
-          walkSpeed = walkSpeed * cellSide,
-          runSpeed = zombieRunSpeed * cellSide,
-          perception = zombiePerception * cellSide,
-          maxRotation = zombieMaxRotation,
-          canLeave = zombieCanLeave,
-          random = random)
+          val a1 = evolve(a0)
 
+          val (a2, ev1) = Agent.changeDirection(w1, simulation.rotationGranularity, ns, rng)(a1)
+          val ev = ev1 ++ Agent.observedEvents(a0, a2)
 
-      def generateSoldier(army: Army) = {
-        val rescue = Rescue(informed = true, alerted = true, informProbability = army.informProbability)
-        Human(
-          world = world,
-          walkSpeed = walkSpeed * cellSide,
-          runSpeed = army.runSpeed * cellSide,
-          exhaustionProbability = army.exhaustionProbability,
-          perception = army.perception * cellSide,
-          maxRotation = army.maxRotation,
-          followRunningProbability = army.followProbability,
-          fight = Fight(army.fightBackProbability, aggressive = army.aggressive),
-          rescue = rescue,
-          canLeave = false,
-          function = Human.Army,
-          rng = random)
-      }
+          Agent.move(w1, simulation.rotationGranularity, rng) (a2) match {
+            case Some(a) => (Some(a), ev.toVector)
+            case None => (None, Vector(Gone(a2)) ++ ev)
+          }
+        }.unzip
 
-      def soldiers =
-        army match {
-          case NoArmy => Vector.empty
-          case a: Army => Vector.fill(a.size)(generateSoldier(a))
-        }
+      val (na2, rescued) = Agent.rescue(w1, na1.flatten)
 
-      def generateRedCrossVolunteers(redCross: RedCross) = {
-        val rescue = Rescue(informProbability = redCross.informProbability, noFollow = true)
-        val antidote = Antidote(activationDelay = redCross.activationDelay, efficiencyProbability = redCross.efficiencyProbability, exhaustionProbability = redCross.exhaustionProbability)
-        Human(
-          world = world,
-          walkSpeed = walkSpeed * cellSide,
-          runSpeed = humanRunSpeed * cellSide,
-          exhaustionProbability = humanExhaustionProbability,
-          perception = humanPerception * cellSide,
-          maxRotation = humanMaxRotation,
-          followRunningProbability = redCross.followProbability,
-          fight = Fight(humanFightBackProbability, aggressive = redCross.aggressive),
-          rescue = rescue,
-          canLeave = false,
-          antidote = antidote,
-          function = Human.RedCross,
-          rng = random)
-      }
+      val newAgents = Agent.joining(w1, index, neighborhoodCache, simulation, step, na2, rng)
 
-      def redCrossVolunteers =
-        redCross match {
-          case NoRedCross => Vector.empty
-          case a: RedCross => Vector.fill(a.size)(generateRedCrossVolunteers(a))
-        }
+      val events =
+        infected.map(i => Zombified(i)) ++
+          died.map(d => Killed(d)) ++
+          rescued.map(r => Rescued(r)) ++
+          moveEvents.flatten
 
-      val allAgents =
-        Vector.fill(humans)(generateHuman) ++
-          Vector.fill(zombies)(generateZombie) ++
-          soldiers ++
-          redCrossVolunteers ++
-          agents
-
-      Simulation(
-        world = world,
-        agents = allAgents,
-        infectionRange = infectionRange * cellSide,
-        humanRunSpeed = humanRunSpeed * cellSide,
-        humanPerception = humanPerception * cellSide,
-        humanMaxRotation = humanMaxRotation,
-        humanExhaustionProbability = humanExhaustionProbability,
-        humanFollowProbability = humanFollowProbability,
-        humanFightBackProbability = humanFightBackProbability,
-        humanInformedRatio = humanInformedRatio,
-        humanInformProbability = humanInformProbability,
-        zombieRunSpeed = zombieRunSpeed * cellSide,
-        zombiePerception = zombiePerception * cellSide,
-        zombieMaxRotation = zombieMaxRotation,
-        zombieCanLeave = zombieCanLeave,
-        walkSpeed = walkSpeed * cellSide,
-        zombiePheromone = Pheromone(zombiePheromoneEvaporation),
-        rotationGranularity = rotationGranularity,
-        demographicEntranceRate = demographicEntranceRate,
-        entranceLambda = entranceLambda
-      )
-
+      (simulation.copy(agents = na2 ++ newAgents, world = w1), events)
     }
+
+
+    def simulate(simulation: Simulation, rng: Random, steps: Int): SimulationResult = {
+      def result(s: Simulation, events: Vector[Event], acc: SimulationResult) = (s :: acc._1, events :: acc._2)
+
+      val (simulations, events) = simulate(simulation, rng, steps, result, (List(), List()))
+      (simulations.reverse, events.reverse)
+    }
+
+    def simulate[ACC](simulation: Simulation, rng: Random, steps: Int, accumulate: (Simulation, Vector[Event], ACC) => ACC, accumulator: ACC): ACC = {
+      val neighborhoodCache = World.visibleNeighborhoodCache(simulation.world, math.max(simulation.relativeHumanPerception, simulation.relativeZombiePerception))
+
+      def run0(s: Int, simulation: Simulation, events: Vector[Event], r: (Simulation, Vector[Event], ACC) => ACC, accumulator: ACC): ACC =
+        if (s == 0) r(simulation, events, accumulator)
+        else {
+          val newAccumulator = r(simulation, events, accumulator)
+          val (newSimulation, newEvents) = step(steps - s, simulation, neighborhoodCache, rng)
+          run0(s - 1, newSimulation, newEvents, r, newAccumulator)
+        }
+
+      run0(steps, simulation, Vector.empty, accumulate, accumulator)
+    }
+
 
   }
 
@@ -236,75 +172,18 @@ object simulation {
     zombiePerception: Double,
     zombieMaxRotation: Double,
     zombieCanLeave: Boolean,
-    walkSpeed: Double,
+    walkSpeedParameter: Double,
     zombiePheromone: PheromoneMechanism,
     rotationGranularity: Int,
-    demographicEntranceRate: Boolean,
-    entranceLambda: Double)
-
-  def step(step: Int, simulation: Simulation, neighborhoodCache: NeighborhoodCache, rng: Random) = {
-    val index = Agent.index(simulation.agents, simulation.world.side)
-    val w1 = Agent.releasePheromone(index, simulation.world, simulation.zombiePheromone)
-    val (ai, infected, died) = Agent.fight(w1, index, simulation.agents, simulation.infectionRange, Agent.zombify(_, _), rng)
-
-    val (na1, moveEvents) =
-      ai.map { a0 =>
-        val ns = Agent.neighbors(index, a0, Agent.perception(a0), neighborhoodCache)
-
-        val evolve =
-          Agent.inform(ns, w1, rng) _ andThen
-          Agent.alert(ns, rng) _ andThen
-          Agent.takeAntidote _ andThen
-          Agent.chooseRescue _ andThen
-          Agent.run(ns) _ andThen
-          Agent.metabolism(rng) _
-
-        val a1 = evolve(a0)
-
-        val (a2, ev) = Agent.changeDirection(w1, simulation.rotationGranularity, ns, rng)(a1)
-
-        Agent.move(w1, simulation.rotationGranularity, rng) (a2) match {
-          case Some(a) => (Some(a), ev.toVector)
-          case None => (None, Vector(Gone(a2)) ++ ev)
-        }
-      }.unzip
-
-    val (na2, rescued) = Agent.rescue(w1, na1.flatten)
-
-    val newAgents = Agent.joining(w1, simulation, na2, rng)
-
-    val events =
-      infected.map(i => Zombified(i)) ++
-      died.map(d => Killed(d)) ++
-      rescued.map(r => Rescued(r)) ++
-      moveEvents.flatten
-
-    (simulation.copy(agents = na2 ++ newAgents, world = w1), events)
+    entranceLaw: EntranceLaw) {
+      def cellSide = space.cellSide(world.side)
+      def relativeInfectionRange = infectionRange * cellSide
+      def relativeHumanPerception = humanPerception * cellSide
+      def relativeZombiePerception = zombiePerception * cellSide
   }
 
- type SimulationResult = (List[Simulation], List[Vector[Event]])
+  type SimulationResult = (List[Simulation], List[Vector[Event]])
 
-
-  def simulate(simulation: Simulation, rng: Random, steps: Int): SimulationResult = {
-    def result(s: Simulation, events: Vector[Event], acc: SimulationResult) = (s :: acc._1, events :: acc._2)
-
-    val (simulations, events) = simulate(simulation, rng, steps, result, (List(), List()))
-    (simulations.reverse, events.reverse)
-  }
-
-  def simulate[ACC](simulation: Simulation, rng: Random, steps: Int, accumulate: (Simulation, Vector[Event], ACC) => ACC, accumulator: ACC): ACC = {
-    val neighborhoodCache = World.visibleNeighborhoodCache(simulation.world, math.max(simulation.humanPerception, simulation.zombiePerception))
-
-    def run0(s: Int, simulation: Simulation, events: Vector[Event], r: (Simulation, Vector[Event], ACC) => ACC, accumulator: ACC): ACC =
-      if (s == 0) r(simulation, events, accumulator)
-      else {
-        val newAccumulator = r(simulation, events, accumulator)
-        val (newSimulation, newEvents) = step(steps - s, simulation, neighborhoodCache, rng)
-        run0(s - 1, newSimulation, newEvents, r, newAccumulator)
-      }
-
-    run0(steps, simulation, Vector.empty, accumulate, accumulator)
-  }
 
   object environment {
     def all = Vector(stadium, jaude)

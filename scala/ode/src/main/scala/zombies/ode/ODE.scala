@@ -78,7 +78,7 @@ object Model {
     val N = state.sum
     val panic = panic0 * (state(2) + state(3)) / N
     val hunt = hunt0 * (state(0) + state(1)) / N
-    val inf = inf0 * (1 - fightback)
+    val inf = inf0 * (state(2) + state(3)) / N * (1 - fightback)
     val out = out0 * (state(0) + state(1)) / N
     val die = die0 * (state(0) + state(1)) / N
 

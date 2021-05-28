@@ -1,5 +1,6 @@
 package zombies
 
+import zombies.world.World.copyCells
 import zombies.world._
 
 import scala.collection.mutable
@@ -9,6 +10,46 @@ import scala.util.Random
 
 
 object worldgen {
+
+
+
+  def addRandomTraps(world: World, number: Int, trap: Trap)(implicit rng: Random): World = {
+    val flatcellswithcoords = world.cells.zipWithIndex.map{case (row,i) => row.zipWithIndex.map{case (cell,j) => (cell,(i,j))}}.flatten
+    val floors = flatcellswithcoords.filter(_._1 match {
+      case Floor(_,_,_,_,_,_,HumanEntrance) => false
+      case Floor(_,_,true,_,_,_,_) => false
+      case Floor(_,_,_,None,_,_,_) => true
+      case _ => false})
+    val traplocs = (1 to number).map(_ => sampleOneBy(floors,{f: (Cell,(Int,Int)) => 1/floors.length}))
+    val newcells = copyCells(world.cells)
+    traplocs.foreach {traploc =>
+      newcells(traploc._2._1)(traploc._2._2) match {
+        case f: Floor => newcells(traploc._2._1)(traploc._2._2) = Floor(f.wallSlope, f.rescueSlope, f.rescueZone, Some(trap), f.information, f.pheromone)
+        case _ =>
+      }
+    }
+    world.copy(cells = newcells)
+  }
+
+  def addRandomEntrances(world: World, number: Int, trap: Trap)(implicit rng: Random): World = {
+    val flatcellswithcoords = world.cells.zipWithIndex.map{case (row,i) => row.zipWithIndex.map{case (cell,j) => (cell,(i,j))}}.flatten
+    val floors = flatcellswithcoords.filter(_._1 match {
+      case Floor(_,_,_,_,_,_,HumanEntrance) => false
+      case Floor(_,_,true,_,_,_,_) => false
+      case Floor(_,_,_,Some(t),_,_,_) => false
+      case Floor(_,_,_,_,_,_,NoEntrance) => true
+      case _ => false})
+    val traplocs = (1 to number).map(_ => sampleOneBy(floors,{f: (Cell,(Int,Int)) => 1/floors.length}))
+    val newcells = copyCells(world.cells)
+    traplocs.foreach {traploc =>
+      newcells(traploc._2._1)(traploc._2._2) match {
+        case f: Floor => newcells(traploc._2._1)(traploc._2._2) = f.copy(entrance = HumanEntrance)
+        case _ =>
+      }
+    }
+    world.copy(cells = newcells)
+  }
+
 
   /**
     * zombie specific
@@ -1023,6 +1064,13 @@ object worldgen {
   }
 
 
+
+  def sampleOneBy[T](sampled: Iterable[T], probability: T => Double)(implicit rng: Random): T = {
+    def f(s: (Iterable[T],T,Double,Double)): (Iterable[T], T, Double, Double) = {
+      (s._1.tail, s._1.head, s._3 + probability (s._1.head), s._4)
+    }
+    f(Iterator.iterate((sampled,sampled.head,0.0.toDouble,rng.nextDouble()))(f).takeWhile(s => s._3 < s._4&&s._1.nonEmpty).toSeq.last)._2
+  }
 
 
 

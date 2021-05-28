@@ -1,0 +1,12 @@
+import _file_.variables._
+
+// Task
+val task = ScalaTask("val k = a * b") set ( // define settings for a task
+  inputs += (a,b),      // input variables
+  outputs += (a, b, k),    // output variables
+  a := 10,               // default value for i
+  b := 7             // default value for j
+)
+
+
+task hook display

@@ -1,0 +1,40 @@
+val seed = Val[Long]
+
+val armySize = Val[Double]
+val fightBackBonus = Val[Double]
+val exhaustionBonus = Val[Double]
+val runBonus = Val[Double]
+val perceptionBonus = Val[Double]
+val rotationBonus = Val[Double]
+
+val zombified = Val[Int]
+val trainingBudget = Val[Double]
+
+val model =
+  ScalaTask("""
+    import zombies._
+    
+    val army = Army(
+      fightBackProbability = 0.8 * (1 + fightBackBonus),
+      exhaustionProbability = physic.humanExhaustionProbability * (1 - exhaustionBonus),
+      runSpeed = physic.humanRunSpeed * (1 + runBonus),
+      perception = physic.humanPerception * (1 + perceptionBonus),
+      maxRotation = physic.humanMaxRotation * (1 + rotationBonus),
+      size = armySize.toInt)
+    
+    val result = zombieInvasion(
+      zombies = 4,
+      humans = 250,
+      army = army,
+      steps = 500,
+      random = Random(seed))
+      
+    val zombified = result.totalZombified
+    val trainingBudget = (1.0 + Seq(fightBackBonus, exhaustionBonus, runBonus, perceptionBonus, rotationBonus).sum.round(3)) * armySize.toInt
+  """) set (
+    inputs += (seed, armySize, fightBackBonus, exhaustionBonus, runBonus, perceptionBonus, rotationBonus),
+    outputs += (zombified, trainingBudget),
+    plugins += pluginsOf[zombies.simulation.Simulation]
+  )
+
+

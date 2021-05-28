@@ -1,0 +1,35 @@
+import zombies._
+
+// OM variable Model inputs
+val seed = Val[Long]
+
+// OM variablle  : Model outputs
+val rescuedDynamic = Val[Array[Int]]
+val zombiesDynamic = Val[Array[Int]]
+
+// model execution Task
+val zombieModel =   ScalaTask("""
+  import zombies._
+
+  val result = 
+    zombieInvasion(
+      zombies = 4,
+      humans = 250,
+      steps = 500,
+      world = jaude,
+      random = Random(seed),
+      humanFollowProbability = 1.0,
+      humanInformedRatio = 0.5,
+      humanInformProbability = 0.5 
+    )
+
+  val zombiesDynamic = result.zombiesDynamic(20)
+  val rescuedDynamic = result.rescuedDynamic(20)"""
+) set (
+  inputs += (seed),
+  outputs += (rescuedDynamic, zombiesDynamic),
+  plugins += pluginsOf[zombies.agent.Agent],
+  seed := 42
+)
+
+zombieModel hook (workDirectory / "dynamic.csv")
