@@ -1,0 +1,45 @@
+import zombies._
+
+// Model inputs
+val humanFollowProbability = Val[Double]
+val humanInformedRatio = Val[Double]
+val humanInformProbability = Val[Double]
+
+// Model outputs
+val peakSize = Val[Int]
+val rescuedDynamic = Val[Array[Int]]
+
+val model =
+  ScalaTask("""
+    import zombies._
+  
+    val result = zombieInvasion(
+      humanFollowProbability = humanFollowProbability,
+      humanInformedRatio = humanInformedRatio,
+      humanInformProbability = humanInformProbability,
+      zombies = 4,
+      humans = 250,
+      steps = 500,
+      random = Random())
+    
+    val peakSize = -result.peakSizeZombified(window = 5)
+  """) set (
+    inputs += (humanFollowProbability, humanInformedRatio, humanInformProbability),
+    outputs += (peakSize),
+    plugins += pluginsOf[zombies.agent.Agent]    
+  )
+  
+val env = SLURMEnvironment("rreuil01", "myria.criann.fr", queue = "debug", wallTime = 10 minutes, nTasks = 1, memory = 2500, workDirectory = "/tmp")
+
+OSEEvolution(
+  evaluation = model,
+  origin = Seq(
+    humanFollowProbability in (0.0 to 1.0 by 0.1),
+    humanInformedRatio in (0.0 to 1.0 by 0.1),
+    humanInformProbability in (0.0 to 1.0 by 0.1)),
+  objectives = Seq(peakSize under -50),
+  parallelism = 100,
+  termination = 200000,
+  distribution = Island(5 minutes)
+) on env hook (workDirectory / "results/coop_ose_possible/", frequency = 100) on env
+
