@@ -32,9 +32,9 @@ val model =
 NSGA2Evolution(
   evaluation = model,
   genome = Seq(
-    humanInformedRatio in (0.0, 1.0),
-    humanInformProbability in (0.0, 1.0),
-    humanFollowProbability in (0.0, 1.0)
+    humanInformedRatio in (0.0 to 1.0),
+    humanInformProbability in (0.0 to 1.0),
+    humanFollowProbability in (0.0 to 1.0)
   ),
   objective = Seq(
     rescuedDynamic aggregate """

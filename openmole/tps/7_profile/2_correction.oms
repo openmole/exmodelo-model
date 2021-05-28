@@ -39,9 +39,9 @@ def profile(param: Val[Double]) = {
       """),
     profile = Seq(param),
     genome = Seq(
-      humanInformedRatio in (0.0, 1.0),
-      humanInformProbability in (0.0, 1.0),
-      humanFollowProbability in (0.0, 1.0)
+      humanInformedRatio in (0.0 to 1.0),
+      humanInformProbability in (0.0 to 1.0),
+      humanFollowProbability in (0.0 to 1.0)
     ),
     termination = 1000,
     stochastic = Stochastic(seed = mySeed)
