@@ -291,7 +291,7 @@ trait DSL {
     vaccinatedExhaustionProbability: Option[Double] = None,
     followProbability: Double = 0.0,
     informProbability: Double = physic.humanInformProbability,
-    aggressive: Boolean = true,
+    aggressive: Boolean = false,
     activationDelay: Int = 10,
     efficiencyProbability: Double = 1.0) =
     simulation.RedCross(
@@ -477,7 +477,7 @@ trait DSL {
     vaccinatedExhaustionProbability: AgentGenerator.Optional[Double] = None,
     followProbability: AgentGenerator.Optional[Double] = None,
     informProbability: AgentGenerator.Optional[Double] = None,
-    aggressive: Boolean = true,
+    aggressive: Boolean = false,
     activationDelay: Int,
     efficiencyProbability: Double,
     location:  AgentGenerator.Optional[Location] = None) extends AgentGenerator
@@ -502,6 +502,8 @@ trait DSL {
     perception:  AgentGenerator.Optional[Double] = None,
     maxRotation:  AgentGenerator.Optional[Double] = None,
     location:  AgentGenerator.Optional[Location] = None) extends AgentGenerator
+
+  type EntranceLaw = agent.Agent.EntranceLaw
 
   implicit class EntranceLawParameterDecorator(e: EntranceLaw.Parameter) {
     def around(range: Double) = {

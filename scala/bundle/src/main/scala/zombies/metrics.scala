@@ -131,6 +131,9 @@ object metrics {
   def peakTimeZombified(results: SimulationResult, window: Int = defaultGroupSize) = peakTimeEvents(results, window, Event.zombified)
   def peakSizeZombified(results: SimulationResult, window: Int = defaultGroupSize) = peakSizeEvents(results, window, Event.zombified)
 
+  def totalZombiesKilled(results: SimulationResult) = totalEvents(results, Event.killed)
+  def totalAntidoteActivated(results: SimulationResult) = totalEvents(results, Event.antidoteActivated)
+
   private def agentsDynamic(results : SimulationResult, by: Int, e: PartialFunction[Agent, Any]) = {
     val (simulations, _) = results
     simulations.take(1).map(_.agents.collect(e).size).toArray ++ simulations.tail.map(_.agents.collect(e).size).grouped(by).map(_.last)

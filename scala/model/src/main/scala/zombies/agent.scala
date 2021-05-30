@@ -324,6 +324,36 @@ object agent {
         case a => a
       }
 
+    def getAntidote(neighbors: Array[Agent], random: Random)(a: Agent) =
+      a match {
+        case h: Human if h.antidote == NoAntidote =>
+          def isRedCross(h: Human) =
+            h.function match {
+              case Human.RedCross => true
+              case _ => false
+            }
+
+          val redCrossAround = neighbors.collect(Agent.human).filter(isRedCross)
+
+          if(!redCrossAround.isEmpty) {
+            val vaccinator = random.shuffle(redCrossAround.toVector).head
+            h.copy(antidote = vaccinator.antidote)
+          } else h
+        case a => a
+      }
+
+    def observedEvents(before: Agent, after: Agent) = {
+      (before, after) match {
+        case (b: Human, a: Human) =>
+          (b.antidote, a.antidote) match {
+            case (NoAntidote, ant: Antidote) if ant.taken => Seq(AntidoteActivated(a))
+            case (antb: Antidote, anta: Antidote) if antb.taken == false && anta.taken == true => Seq(AntidoteActivated(a))
+            case _ => Seq()
+          }
+        case _ => Seq()
+      }
+    }
+
     def run(neighbors: Array[Agent])(a: Agent) =
       a match {
         case h: Human if neighbors.exists(Agent.isZombie) || h.rescue.reach => Human.run(h)

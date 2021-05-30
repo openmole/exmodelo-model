@@ -5,13 +5,7 @@ val humanInformProbability = Val[Double]
 val seed = Val[Long]
 val rescuedDynamic = Val[Array[Int]]
 
-def distanceMedian(vs: Array[Array[Int]]): Double = {
-  val medianData = Array(0, 0, 5, 12.5, 21.5, 24, 22, 29, 19.5, 11, 6, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-  val simulated = vs.transpose.map(_.median)
-  absoluteDistance(medianData, simulated)
-}
-
-val env = SLURMEnvironment("xxxxx", "myria.criann.fr", queue = "2tcourt", wallTime = 20 minutes, nTasks = 1, memory = 2500, workDirectory = "/tmp", reservation = "xModelo")
+val env = SLURMEnvironment("XXXX", "myria.criann.fr", queue = "knl", wallTime = 20 minutes, nTasks = 1, memory = 2500)
 
 val model =
   ScalaTask("""
@@ -38,16 +32,21 @@ val model =
 NSGA2Evolution(
   evaluation = model,
   genome = Seq(
-    humanInformedRatio in (0.0, 1.0),
-    humanInformProbability in (0.0, 1.0),
-    humanFollowProbability in (0.0, 1.0)
+    humanInformedRatio in (0.0 to 1.0),
+    humanInformProbability in (0.0 to 1.0),
+    humanFollowProbability in (0.0 to 1.0)
   ),
-  objective = Seq(rescuedDynamic aggregate distanceMedian),
+  objective = Seq(
+    rescuedDynamic aggregate """
+      val medianData = Array(0, 0, 5, 12.5, 21.5, 24, 22, 29, 19.5, 11, 6, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+      val simulated = rescuedDynamic.transpose.map(_.median)
+      absoluteDistance(medianData, simulated)
+    """),
   termination = 100000,
-  parallelism = 200,
+  parallelism = 500,
   distribution = Island(5 minutes),
   stochastic = Stochastic(seed = seed)
-) hook (workDirectory / "results_2007/", frequency = 100) on env
+) hook (workDirectory / "results", frequency = 100) on env
 
 
 
