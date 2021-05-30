@@ -8,10 +8,10 @@ val humanInformProbability = Val[Double]
 val seed = Val[Long]
 
 // Model outputs
-val peakTime = Val[Double]
-val peakSize = Val[Double]
-val totalRescued = Val[Double]
-val totalZombified = Val[Double]
+val peakTime = Val[Int]
+val peakSize = Val[Int]
+val totalRescued = Val[Int]
+val totalZombified = Val[Int]
 
 val model =
   ScalaTask("""
@@ -44,7 +44,7 @@ DirectSampling(
     Replication(
       evaluation = model,
       seed = seed,
-      sample = 10
+      sample = 1//10
    ),
   sampling = /*LHS(
       100,
