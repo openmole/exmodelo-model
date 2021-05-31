@@ -44,13 +44,14 @@ DirectSampling(
     Replication(
       evaluation = model,
       seed = seed,
-      sample = 1//10
+      sample = 10
    ),
   sampling = /*LHS(
-      100,
-      humanFollowProbability in (0.0,1.0),
-      humanInformedRatio in (0.0,1.0),
-      humanInformProbability in (0.0,1.0)
+      sample = 100,
+      factor = Seq(humanFollowProbability in (0.0,1.0),
+        humanInformedRatio in (0.0,1.0),
+        humanInformProbability in (0.0,1.0)
+      )
     ) */
     (humanFollowProbability in (0.0 to 1.0 by 0.5))
     x (humanInformedRatio in (0.0 to 1.0 by 0.5))

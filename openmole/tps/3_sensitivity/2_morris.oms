@@ -48,6 +48,6 @@ SensitivityMorris(
     humanInformProbability in (0.0, 1.0)
   ),
   outputs = Seq(totalRescued, totalZombified, peakTime, peakSize),
-  sample = 2,// 10,
-  level = 2//5
+  sample = 10,
+  level = 5
 ) hook (workDirectory / "morris")
