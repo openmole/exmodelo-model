@@ -19,7 +19,7 @@ val y = Val[Array[Double]]
 val v = Val[Array[Double]]
 
 
-val model = ScalaTask(
+val flattenGrid = ScalaTask(
     """
     val rawvals = myGrid.zipWithIndex.map{case (row,i) => row.zipWithIndex.map{case (c,j)=> (c,i.toDouble,j.toDouble)}}.flatten
     val v = rawvals.map{_._1}
@@ -34,19 +34,20 @@ val model = ScalaTask(
   outputs += (v,x,y)
 )
 
+val flatGridHook = CSVHook(workDirectory / "grids.csv", values = Seq(v,x,y),arrayOnRow=false)
+
 DirectSampling(
-    evaluation = model hook (workDirectory / "grids.csv"),                  // EmptyTask(),//
-    sampling = 
+    evaluation = (flattenGrid hook flatGridHook),                  // EmptyTask(),//
+    sampling =
     (myCenters is 3) x
       (myRadius is 10.0) x
-      (myThreshold is 10.0) x
+      (myThreshold is 0.5) x
       (myGrid is ExpMixtureThresholdSpatialSampling(gridSize = 100,
       center = myCenters, radius = myRadius, threshold = myThreshold))
     zipWithIndex id
-) 
-//hook MatrixHook(workDirectory / "gridsMat.csv",myGrid)
+) hook MatrixHook(workDirectory / "gridsMat.csv",myGrid)
 
-/*  
+/*
 
 (myBlocksNumber in (10 to 15 by 1)) x
       (myBlocksMinSize in (1 to 3 by 1)) x
@@ -63,5 +64,3 @@ DirectSampling(
       (myThreshold is 10.0) x
       (myGrid is ExpMixtureThresholdSpatialSampling(gridSize = 100, center = myCenters, radius = myRadius, threshold = myThreshold))
   */
-  
-  
