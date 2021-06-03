@@ -4,6 +4,7 @@ import world._
 import space._
 import simulation._
 import tools._
+import zombies.agent.Antidote.activated
 
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
@@ -26,10 +27,12 @@ object agent {
   case object NoAntidote extends AntidoteMechanism
 
   object Antidote {
-    def activated(antidote: Antidote) = antidote.activationDelay <= 0
+    def activated(antidote: Antidote) = antidote.taken && antidote.activationDelay <= 0
+    def activate(antidote: Antidote) = antidote.copy(taken = true)
+    def immunityLoss(antidote: Antidote) = NoAntidote
   }
 
-  case class Antidote(activationDelay: Int, efficiencyProbability: Double, vaccinatedExhaustionProbability: Option[Double], taken: Boolean = false) extends AntidoteMechanism
+  case class Antidote(activationDelay: Int, efficiencyProbability: Double, vaccinatedExhaustionProbability: Option[Double], immunityLoosProbability: Double, taken: Boolean = false) extends AntidoteMechanism
 
   object Agent {
 
@@ -317,11 +320,22 @@ object agent {
       a match {
         case h: Human if h.rescue.alerted =>
           h.antidote match {
-            case ant: Antidote if !ant.taken => h.copy(antidote = ant.copy(taken = true))
+            case ant: Antidote if !ant.taken => h.copy(antidote = Antidote.activate(ant))
             case ant: Antidote if ant.activationDelay > 0 => h.copy(antidote = ant.copy(activationDelay = ant.activationDelay - 1))
             case _ => a
           }
         case a => a
+      }
+
+    def looseImmunity(random: Random)(a: Agent) =
+      a match {
+        case h: Human =>
+          h.antidote match {
+            case antidote: Antidote if activated(antidote) && antidote.immunityLoosProbability > 0.0 =>
+              if(random.nextDouble() < antidote.immunityLoosProbability) h.copy(antidote = NoAntidote) else h
+            case _ => h
+          }
+        case _ => a
       }
 
     def getAntidote(neighbors: Array[Agent], random: Random)(a: Agent) =
@@ -348,6 +362,7 @@ object agent {
           (b.antidote, a.antidote) match {
             case (NoAntidote, ant: Antidote) if ant.taken => Seq(AntidoteActivated(a))
             case (antb: Antidote, anta: Antidote) if antb.taken == false && anta.taken == true => Seq(AntidoteActivated(a))
+            case (ant: Antidote, NoAntidote) => Seq(ImmunityLoss(a))
             case _ => Seq()
           }
         case _ => Seq()

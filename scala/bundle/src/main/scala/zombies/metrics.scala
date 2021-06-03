@@ -133,6 +133,7 @@ object metrics {
 
   def totalZombiesKilled(results: SimulationResult) = totalEvents(results, Event.killed)
   def totalAntidoteActivated(results: SimulationResult) = totalEvents(results, Event.antidoteActivated)
+  def totalImmunityLoss(results: SimulationResult) = totalEvents(results, Event.immunityLoss)
 
   private def agentsDynamic(results : SimulationResult, by: Int, e: PartialFunction[Agent, Any]) = {
     val (simulations, _) = results

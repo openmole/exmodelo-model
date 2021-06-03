@@ -184,7 +184,7 @@ trait DSL {
     def generateRedCrossVolunteers(redCross: RedCross) = {
       import _root_.zombies.agent._
       val rescue = Rescue(informProbability = redCross.informProbability, noFollow = true)
-      val antidote = Antidote(activationDelay = redCross.activationDelay, efficiencyProbability = redCross.efficiencyProbability, vaccinatedExhaustionProbability = redCross.vaccinatedExhaustionProbability)
+      val antidote = Antidote(activationDelay = redCross.activationDelay, immunityLoosProbability = redCross.immunityLoosProbability, efficiencyProbability = redCross.efficiencyProbability, vaccinatedExhaustionProbability = redCross.vaccinatedExhaustionProbability)
       _root_.zombies.agent.Human(
         world = world,
         walkSpeedParameter = walkSpeed,
@@ -407,7 +407,7 @@ trait DSL {
       def generateVolunteers(volunteer: Volunteer) = {
         import _root_.zombies.agent._
         val rescue = Rescue(informProbability = volunteer.informProbability.getOrElse(humanInformProbability), noFollow = true)
-        val antidote = Antidote(activationDelay = volunteer.activationDelay, efficiencyProbability = volunteer.efficiencyProbability, vaccinatedExhaustionProbability = volunteer.vaccinatedExhaustionProbability.toOption)
+        val antidote = Antidote(activationDelay = volunteer.activationDelay, immunityLoosProbability = volunteer.immunityLoosProbability, efficiencyProbability = volunteer.efficiencyProbability, vaccinatedExhaustionProbability = volunteer.vaccinatedExhaustionProbability.toOption)
         _root_.zombies.agent.Human(
           world = world,
           walkSpeedParameter = walkSpeed,
@@ -480,6 +480,7 @@ trait DSL {
     aggressive: Boolean = false,
     activationDelay: Int,
     efficiencyProbability: Double,
+    immunityLoosProbability: Double = 0.0,
     location:  AgentGenerator.Optional[Location] = None) extends AgentGenerator
 
 

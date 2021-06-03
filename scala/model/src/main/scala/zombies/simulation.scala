@@ -48,6 +48,10 @@ object simulation {
     def antidoteActivated: PartialFunction[Event, AntidoteActivated] = {
       case e: AntidoteActivated => e
     }
+
+    def immunityLoss: PartialFunction[Event, ImmunityLoss] = {
+      case e: ImmunityLoss => e
+    }
   }
 
   sealed trait Event
@@ -59,6 +63,7 @@ object simulation {
   case class PursueHuman(zombie: Zombie) extends Event
   case class Trapped(zombie: Zombie) extends Event
   case class AntidoteActivated(human: Human) extends Event
+  case class ImmunityLoss(human: Human) extends Event
 
   sealed trait ArmyOption
   case object NoArmy extends ArmyOption
@@ -82,7 +87,8 @@ object simulation {
     informProbability: Double = physic.humanInformProbability,
     aggressive: Boolean = true,
     activationDelay: Int,
-    efficiencyProbability: Double) extends RedCrossOption
+    efficiencyProbability: Double,
+    immunityLoosProbability: Double = 0.0) extends RedCrossOption
 
 
   case class HummanParameter()
@@ -102,6 +108,7 @@ object simulation {
             Agent.inform(ns, w1, rng) _ andThen
               Agent.alert(ns, rng) _ andThen
               Agent.takeAntidote _ andThen
+              Agent.looseImmunity(rng) andThen
               Agent.getAntidote(ns, rng) _ andThen
               Agent.chooseRescue _ andThen
               Agent.run(ns) _ andThen
