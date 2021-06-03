@@ -1,0 +1,13 @@
+val grid = Val[Array[Array[Double]]]
+
+ScalaTask("""
+    import org.openmole.spatialdata.grid.real.OSMGridGenerator
+
+    val lon =  -0.1
+    val lat = 51.50
+
+    val grid = OSMGridGenerator(lon,lat,500,50).generateGrid(new util.Random)
+""") set (
+    plugins += pluginsOf[org.openmole.spatialdata.grid.real.OSMGridGenerator],
+    outputs += (grid)
+) hook MatrixHook(workDirectory / "world.csv",grid)

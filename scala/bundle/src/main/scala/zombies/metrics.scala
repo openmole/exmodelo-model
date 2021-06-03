@@ -188,6 +188,13 @@ object metrics {
   object SpatStat {
 
 
+    private def agentsLocations(results : SimulationResult, by: Int, e: PartialFunction[Agent, Any]): List[Vector[(Int,Int)]] = {
+      val (simulations, _) = results
+      //simulations.take(1).map(_.agents.collect(e).size).toArray ++ simulations.tail.map(_.agents.collect(e).size).grouped(by).map(_.last)
+      simulations.map(_.agents.collect(e).map{a => Agent.location(a.asInstanceOf[Agent],simulations.head.world.side)})
+    }
+
+
     def slope(matrix: Array[Array[Double]]): Double = slope(matrix.flatten)
 
     /**

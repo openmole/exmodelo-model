@@ -1,0 +1,45 @@
+val myBlocksNumber = Val[Int]
+val myBlocksMinSize = Val[Int]
+val myBlocksMaxSize = Val[Int]
+
+val myPercolationProba = Val[Double]
+val myBordPoints = Val[Int]
+val myLinkWidth = Val[Double]
+
+val myCenters = Val[Int]
+val myRadius = Val[Double]
+val myThreshold = Val[Double]
+
+val id = Val[Int]
+
+val myGrid = Val[Array[Array[Double]]]
+
+
+DirectSampling(
+    evaluation = EmptyTask(),
+    sampling =
+    (myCenters is 3) x
+      (myRadius is 10.0) x
+      (myThreshold is 0.5) x
+      (id in (0 to 10 by 1)) x
+      (myGrid is ExpMixtureThresholdSpatialSampling(gridSize = 100,
+      center = myCenters, radius = myRadius, threshold = myThreshold))
+) hook MatrixHook(workDirectory / "grids" / "gridMat_${id}.csv",myGrid)
+
+/*
+
+(myBlocksNumber in (10 to 15 by 1)) x
+      (myBlocksMinSize in (1 to 3 by 1)) x
+      (myBlocksMaxSize in Range[Int]("myBlocksMinSize + 3", "myBlocksMinSize + 5")) x
+      (myGrid is BlocksGridSpatialSampling(gridSize = 100, number = myBlocksNumber, minSize = myBlocksMinSize, maxSize = myBlocksMaxSize))
+
+(myPercolation is 0.7) x
+      (myBordPoint is 10) x
+      (myLinkWidth is 3.0) x
+      (myGrid is PercolationGridSpatialSampling(gridSize = 100, percolation = myPercolation, bordPoint = myBordPoint, linkWidth = myLinkWidth))
+
+  ((myCenters is 3) x
+      (myRadius is 10.0) x
+      (myThreshold is 10.0) x
+      (myGrid is ExpMixtureThresholdSpatialSampling(gridSize = 100, center = myCenters, radius = myRadius, threshold = myThreshold))
+  */

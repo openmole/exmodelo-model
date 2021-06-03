@@ -1,5 +1,6 @@
 package zombies
 
+import zombies.space.Location
 import zombies.world.World.copyCells
 import zombies.world._
 
@@ -48,6 +49,21 @@ object worldgen {
       }
     }
     world.copy(cells = newcells)
+  }
+
+  def addEntrances(world: World, entrances: Seq[Location]): World = {
+    val cells = copyCells(world.cells)
+
+    for {
+      (x, y) <- entrances
+    } {
+      cells(x)(y) match {
+        case f: Floor => cells(x)(y) = Floor(f.wallSlope, f.rescueSlope, f.rescueZone, f.trap, f.information, f.pheromone,HumanEntrance)
+        case _ =>
+      }
+    }
+
+    world.copy(cells = cells)
   }
 
 
