@@ -32,7 +32,7 @@ object agent {
     def immunityLoss(antidote: Antidote) = NoAntidote
   }
 
-  case class Antidote(activationDelay: Int, efficiencyProbability: Double, vaccinatedExhaustionProbability: Option[Double], immunityLoosProbability: Double, taken: Boolean = false) extends AntidoteMechanism
+  case class Antidote(activationDelay: Int, efficiencyProbability: Double, vaccinatedExhaustionProbability: Option[Double], immunityLossProbability: Double, taken: Boolean = false) extends AntidoteMechanism
 
   object Agent {
 
@@ -331,8 +331,8 @@ object agent {
       a match {
         case h: Human =>
           h.antidote match {
-            case antidote: Antidote if activated(antidote) && antidote.immunityLoosProbability > 0.0 =>
-              if(random.nextDouble() < antidote.immunityLoosProbability) h.copy(antidote = NoAntidote) else h
+            case antidote: Antidote if activated(antidote) && antidote.immunityLossProbability > 0.0 =>
+              if(random.nextDouble() < antidote.immunityLossProbability) h.copy(antidote = NoAntidote) else h
             case _ => h
           }
         case _ => a

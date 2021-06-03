@@ -188,7 +188,7 @@ trait DSL {
       val alerted = random.nextDouble() < redCross.alertedRatio
 
       val rescue = Rescue(informProbability = redCross.informProbability, noFollow = true, alerted = alerted, informed = informed)
-      val antidote = Antidote(activationDelay = redCross.activationDelay, immunityLoosProbability = redCross.immunityLossProbability, efficiencyProbability = redCross.efficiencyProbability, vaccinatedExhaustionProbability = redCross.vaccinatedExhaustionProbability)
+      val antidote = Antidote(activationDelay = redCross.activationDelay, immunityLossProbability = redCross.immunityLossProbability, efficiencyProbability = redCross.efficiencyProbability, vaccinatedExhaustionProbability = redCross.vaccinatedExhaustionProbability)
       _root_.zombies.agent.Human(
         world = world,
         walkSpeedParameter = walkSpeed,
@@ -429,7 +429,7 @@ trait DSL {
         val informed = random.nextDouble() < redCross.informedRatio.getOrElse(humanInformedRatio)
         val alerted = random.nextDouble() < redCross.alertedRatio.getOrElse(0.0)
         val rescue = Rescue(informProbability = redCross.informProbability.getOrElse(humanInformProbability), noFollow = true, alerted = alerted, informed = informed)
-        val antidote = Antidote(activationDelay = redCross.activationDelay, immunityLoosProbability = redCross.immunityLoosProbability, efficiencyProbability = redCross.efficiencyProbability, vaccinatedExhaustionProbability = redCross.vaccinatedExhaustionProbability.toOption)
+        val antidote = Antidote(activationDelay = redCross.activationDelay, immunityLossProbability = redCross.immunityLoosProbability, efficiencyProbability = redCross.efficiencyProbability, vaccinatedExhaustionProbability = redCross.vaccinatedExhaustionProbability.toOption)
         _root_.zombies.agent.Human(
           world = world,
           walkSpeedParameter = walkSpeed,
