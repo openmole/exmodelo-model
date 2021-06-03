@@ -41,6 +41,7 @@ package object zombies extends DSL {
 
     def totalZombiesKilled = metrics.totalZombiesKilled(results)
     def totalAntidoteActivated = metrics.totalAntidoteActivated(results)
+    def totalImmunityLoss = metrics.totalImmunityLoss(results)
 
     // spatial observables
     def spatialMoranZombified: Double = metrics.spatialMoran(metrics.zombified)(results)
