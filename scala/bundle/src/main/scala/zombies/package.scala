@@ -28,6 +28,7 @@ package object zombies extends DSL {
     def pursueDynamic(by: Int = defaultGroupSize) = metrics.pursueDynamic(results, by)
     def humansGoneDynamic(by: Int = defaultGroupSize) = metrics.humansGoneDynamic(results, by)
     def zombiesGoneDynamic(by: Int = defaultGroupSize) = metrics.zombiesGoneDynamic(results, by)
+    def antidoteActivatedDynamic(by: Int = defaultGroupSize) = metrics.antidoteActivatedDynamic(results, by)
     def totalRescued = metrics.totalRescued(results)
 
     def halfTimeRescued = metrics.halfTimeRescued(results)

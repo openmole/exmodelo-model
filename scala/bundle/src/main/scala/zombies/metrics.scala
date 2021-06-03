@@ -106,6 +106,7 @@ object metrics {
   def pursueDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.pursue)
   def humansGoneDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.humanGone)
   def zombiesGoneDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.zombieGone)
+  def antidoteActivatedDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.antidoteActivated)
 
   def accumulatedRescuedDynamic(results: SimulationResult, by: Int = defaultGroupSize) = accumulatedEventDynamic(results, Event.rescued)
   def totalRescued(results: SimulationResult) = totalEvents(results, Event.rescued)
