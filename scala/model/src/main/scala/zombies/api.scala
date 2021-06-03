@@ -1,7 +1,7 @@
 package zombies
 
 import zombies.agent.Agent
-import zombies.agent.Agent.{EntranceLaw, zombie}
+import zombies.agent.Agent.{EntranceLaw, looseImmunity, zombie}
 import zombies.simulation.{ArmyOption, NoArmy, NoRedCross, RedCrossOption}
 import zombies.space.{Location, Position}
 import zombies.world.World
@@ -183,17 +183,21 @@ trait DSL {
 
     def generateRedCrossVolunteers(redCross: RedCross) = {
       import _root_.zombies.agent._
-      val rescue = Rescue(informProbability = redCross.informProbability, noFollow = true)
-      val antidote = Antidote(activationDelay = redCross.activationDelay, immunityLoosProbability = redCross.immunityLoosProbability, efficiencyProbability = redCross.efficiencyProbability, vaccinatedExhaustionProbability = redCross.vaccinatedExhaustionProbability)
+
+      val informed = random.nextDouble() < redCross.informedRatio
+      val alerted = random.nextDouble() < redCross.alertedRatio
+
+      val rescue = Rescue(informProbability = redCross.informProbability, noFollow = true, alerted = alerted, informed = informed)
+      val antidote = Antidote(activationDelay = redCross.activationDelay, immunityLoosProbability = redCross.immunityLossProbability, efficiencyProbability = redCross.efficiencyProbability, vaccinatedExhaustionProbability = redCross.vaccinatedExhaustionProbability)
       _root_.zombies.agent.Human(
         world = world,
         walkSpeedParameter = walkSpeed,
-        runSpeedParameter = humanRunSpeed,
-        exhaustionProbability = humanExhaustionProbability,
-        perceptionParameter = humanPerception,
+        runSpeedParameter = redCross.runSpeed,
+        exhaustionProbability = redCross.exhaustionProbability,
+        perceptionParameter = redCross.perception,
         maxRotation = humanMaxRotation,
         followRunningProbability = redCross.followProbability,
-        fight = Fight(humanFightBackProbability, aggressive = redCross.aggressive),
+        fight = Fight(redCross.fightBackProbability, aggressive = redCross.aggressive),
         rescue = rescue,
         canLeave = false,
         antidote = antidote,
@@ -293,7 +297,15 @@ trait DSL {
     informProbability: Double = physic.humanInformProbability,
     aggressive: Boolean = false,
     activationDelay: Int = 10,
-    efficiencyProbability: Double = 1.0) =
+    efficiencyProbability: Double = 1.0,
+    immunityLossProbability: Double = 0.0,
+    fightBackProbability: Double = 1.0,
+    exhaustionProbability: Double = physic.humanExhaustionProbability,
+    perception: Double = physic.humanPerception,
+    runSpeed: Double = physic.humanRunSpeed,
+    maxRotation: Double = physic.humanMaxRotation,
+    informedRatio: Double = 0.0,
+    alertedRatio: Double = 0.0) =
     simulation.RedCross(
       size,
       vaccinatedExhaustionProbability = vaccinatedExhaustionProbability,
@@ -301,7 +313,15 @@ trait DSL {
       informProbability = informProbability,
       aggressive = aggressive,
       activationDelay = activationDelay,
-      efficiencyProbability = efficiencyProbability
+      efficiencyProbability = efficiencyProbability,
+      immunityLossProbability = immunityLossProbability,
+      fightBackProbability = fightBackProbability,
+      exhaustionProbability = exhaustionProbability,
+      perception = perception,
+      runSpeed = runSpeed,
+      maxRotation = maxRotation,
+      informedRatio = informedRatio,
+      alertedRatio = alertedRatio
     )
 
   def World(s: String) = zombies.world.World.parse()(s)
@@ -404,19 +424,21 @@ trait DSL {
           rng = random)
       }
 
-      def generateVolunteers(volunteer: Volunteer) = {
+      def generateVolunteers(redCross: Volunteer) = {
         import _root_.zombies.agent._
-        val rescue = Rescue(informProbability = volunteer.informProbability.getOrElse(humanInformProbability), noFollow = true)
-        val antidote = Antidote(activationDelay = volunteer.activationDelay, immunityLoosProbability = volunteer.immunityLoosProbability, efficiencyProbability = volunteer.efficiencyProbability, vaccinatedExhaustionProbability = volunteer.vaccinatedExhaustionProbability.toOption)
+        val informed = random.nextDouble() < redCross.informedRatio.getOrElse(humanInformedRatio)
+        val alerted = random.nextDouble() < redCross.alertedRatio.getOrElse(0.0)
+        val rescue = Rescue(informProbability = redCross.informProbability.getOrElse(humanInformProbability), noFollow = true, alerted = alerted, informed = informed)
+        val antidote = Antidote(activationDelay = redCross.activationDelay, immunityLoosProbability = redCross.immunityLoosProbability, efficiencyProbability = redCross.efficiencyProbability, vaccinatedExhaustionProbability = redCross.vaccinatedExhaustionProbability.toOption)
         _root_.zombies.agent.Human(
           world = world,
           walkSpeedParameter = walkSpeed,
-          runSpeedParameter = humanRunSpeed,
-          exhaustionProbability = humanExhaustionProbability,
-          perceptionParameter = humanPerception,
-          maxRotation = humanMaxRotation,
-          followRunningProbability = volunteer.followProbability.getOrElse(humanFollowProbability),
-          fight = Fight(humanFightBackProbability, aggressive = volunteer.aggressive),
+          runSpeedParameter = redCross.runSpeed.getOrElse(humanRunSpeed),
+          exhaustionProbability = redCross.exhaustionProbability.getOrElse(humanExhaustionProbability),
+          perceptionParameter = redCross.perception.getOrElse(humanPerception),
+          maxRotation = redCross.maxRotation.getOrElse(humanMaxRotation),
+          followRunningProbability = redCross.followProbability.getOrElse(humanFollowProbability),
+          fight = Fight(humanFightBackProbability, aggressive = redCross.aggressive),
           rescue = rescue,
           canLeave = false,
           antidote = antidote,
@@ -479,8 +501,15 @@ trait DSL {
     informProbability: AgentGenerator.Optional[Double] = None,
     aggressive: Boolean = false,
     activationDelay: Int,
-    efficiencyProbability: Double,
+    efficiencyProbability: Double = 1.0,
     immunityLoosProbability: Double = 0.0,
+    fightBackProbability: AgentGenerator.Optional[Double] = None,
+    exhaustionProbability:  AgentGenerator.Optional[Double] = None,
+    perception: AgentGenerator.Optional[Double] = None,
+    runSpeed: AgentGenerator.Optional[Double] = None,
+    informedRatio: AgentGenerator.Optional[Double] = None,
+    maxRotation: AgentGenerator.Optional[Double] = None,
+    alertedRatio: AgentGenerator.Optional[Double] = None,
     location:  AgentGenerator.Optional[Location] = None) extends AgentGenerator
 
 

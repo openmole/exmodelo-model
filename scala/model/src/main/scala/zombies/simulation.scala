@@ -88,7 +88,14 @@ object simulation {
     aggressive: Boolean = true,
     activationDelay: Int,
     efficiencyProbability: Double,
-    immunityLoosProbability: Double = 0.0) extends RedCrossOption
+    immunityLossProbability: Double = 0.0,
+    maxRotation: Double = physic.humanMaxRotation,
+    fightBackProbability: Double = physic.humanFightBackProbability,
+    exhaustionProbability:  Double = physic.humanExhaustionProbability,
+    perception: Double = physic.humanPerception,
+    runSpeed: Double = physic.humanRunSpeed,
+    informedRatio: Double = physic.humanInformedRatio,
+    alertedRatio: Double = 0.0) extends RedCrossOption
 
 
   case class HummanParameter()
