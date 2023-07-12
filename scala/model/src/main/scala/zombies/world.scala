@@ -128,7 +128,7 @@ object world {
           finished = false
         }
 
-        if(!finished) pass
+        if !finished then pass()
       }
 
       pass()

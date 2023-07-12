@@ -15,13 +15,13 @@ object worldgen {
 
 
   def addRandomTraps(world: World, number: Int, trap: Trap)(implicit rng: Random): World = {
-    val flatcellswithcoords = world.cells.zipWithIndex.map{case (row,i) => row.zipWithIndex.map{case (cell,j) => (cell,(i,j))}}.flatten
+    val flatcellswithcoords = world.cells.zipWithIndex.map{ (row,i) => row.zipWithIndex.map{case (cell,j) => (cell,(i,j))}}.flatten
     val floors = flatcellswithcoords.filter(_._1 match {
       case Floor(_,_,_,_,_,_,HumanEntrance) => false
       case Floor(_,_,true,_,_,_,_) => false
       case Floor(_,_,_,None,_,_,_) => true
       case _ => false})
-    val traplocs = (1 to number).map(_ => sampleOneBy(floors,{f: (Cell,(Int,Int)) => 1/floors.length}))
+    val traplocs = (1 to number).map(_ => sampleOneBy(floors, _ => 1 / floors.length))
     val newcells = copyCells(world.cells)
     traplocs.foreach {traploc =>
       newcells(traploc._2._1)(traploc._2._2) match {
@@ -33,14 +33,14 @@ object worldgen {
   }
 
   def addRandomEntrances(world: World, number: Int, trap: Trap)(implicit rng: Random): World = {
-    val flatcellswithcoords = world.cells.zipWithIndex.map{case (row,i) => row.zipWithIndex.map{case (cell,j) => (cell,(i,j))}}.flatten
+    val flatcellswithcoords = world.cells.zipWithIndex.map{(row,i) => row.zipWithIndex.map{case (cell,j) => (cell,(i,j))}}.flatten
     val floors = flatcellswithcoords.filter(_._1 match {
       case Floor(_,_,_,_,_,_,HumanEntrance) => false
       case Floor(_,_,true,_,_,_,_) => false
       case Floor(_,_,_,Some(t),_,_,_) => false
       case Floor(_,_,_,_,_,_,NoEntrance) => true
       case _ => false})
-    val traplocs = (1 to number).map(_ => sampleOneBy(floors,{f: (Cell,(Int,Int)) => 1/floors.length}))
+    val traplocs = (1 to number).map(_ => sampleOneBy(floors,_ => 1/floors.length))
     val newcells = copyCells(world.cells)
     traplocs.foreach {traploc =>
       newcells(traploc._2._1)(traploc._2._2) match {
@@ -309,19 +309,19 @@ object worldgen {
         }
 
       // Helper function to carve out paths from the next vertex matrix.
-      def extractPath(path: ArrayBuffer[Node],pathLinks: ArrayBuffer[Link], i: Int, j: Int) {
-        if (ds(i)(j) == inf) return
+      def extractPath(path: ArrayBuffer[Node],pathLinks: ArrayBuffer[Link], i: Int, j: Int): Unit =
+        if (ds(i)(j) == inf) return ()
         val k = ns(i)(j)
-        if (k != -1) {
+        if (k != -1)
+        then
           extractPath(path,pathLinks, i, k)
           //assert(revnodes.contains(j),"error : "+k)
           path.append(revnodes(k))
           extractPath(path,pathLinks, k, j)
-        }else {
-          assert(linksMap.contains(revnodes(i).id,revnodes(j).id),"error : "+network.links.filter{case l => l.e1.id==revnodes(i).id&&l.e2.id==revnodes(j).id}+" - "+network.links.filter{case l => l.e2.id==revnodes(i).id&&l.e1.id==revnodes(j).id})
+        else
+          assert(linksMap.contains(revnodes(i).id,revnodes(j).id),"error : "+network.links.filter{ l => l.e1.id==revnodes(i).id&&l.e2.id==revnodes(j).id}+" - "+network.links.filter{ l => l.e2.id==revnodes(i).id&&l.e1.id==revnodes(j).id})
           pathLinks.append(linksMap(revnodes(i).id,revnodes(j).id))
-        }
-      }
+
 
       // Extract paths.
       //val pss = mutable.Map[Int, Map[Int, Seq[Int]]]()
@@ -646,7 +646,7 @@ object worldgen {
       var iteration = 0
       while(bordConnected<bordPoints&&iteration<maxIterations){
         network = Network.percolate(network,percolationProba,linkFilter={
-          l: Link => l.weight==0.0&&(
+          (l: Link) => l.weight==0.0&&(
             (((l.e1.x!=xmin)&&(l.e2.x!=xmin))||((l.e1.x==xmin)&&(l.e2.x!=xmin))||((l.e2.x==xmin)&&(l.e1.x!=xmin)))&&
               (((l.e1.x!=xmax)&&(l.e2.x!=xmax))||((l.e1.x==xmax)&&(l.e2.x!=xmax))||((l.e2.x==xmax)&&(l.e1.x!=xmax)))&&
               (((l.e1.y!=ymin)&&(l.e2.y!=ymin))||((l.e1.y==ymin)&&(l.e2.y!=ymin))||((l.e2.y==ymin)&&(l.e1.y!=ymin)))&&
@@ -800,14 +800,18 @@ object worldgen {
       * @param world
       * @return
       */
-    def avgBlockArea(world: Array[Array[Double]],cachedNetwork: Option[Network] = None): Double = {
+    def avgBlockArea(world: Array[Array[Double]],cachedNetwork: Option[Network] = None): Double =
       //val inversedNetwork = Network.gridToNetwork(world.map{_.map{case x => 1.0 - x}})
       val network = cachedNetwork match {case None => Network.gridToNetwork(world);case n => n.get}
       val components = Network.connectedComponents(network)
-      val avgblockarea = components.size match {case n if n == 0 => 0.0;case n => components.map{_.nodes.size}.sum/components.size}
-      //println("avgblockarea = "+avgblockarea)
+      val avgblockarea =
+        components.size match
+          case n if n == 0 => 0.0
+          case n =>
+            val r = components.map{_.nodes.size}.sum / components.size
+            r.toDouble
+
       avgblockarea
-    }
 
     /**
       * avg component area

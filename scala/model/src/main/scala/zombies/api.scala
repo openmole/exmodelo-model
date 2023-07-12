@@ -326,27 +326,23 @@ trait DSL {
 
   def World(s: String) = zombies.world.World.parse()(s)
 
-  object AgentGenerator {
+  object AgentGenerator:
 
-    object Optional {
-      implicit def toOptional[T](t: T) = Value(t)
+    object Optional:
+      implicit def toOptional[T](t: T): Value[T] = Value(t)
 
-      implicit def toOption[T](optional: Optional[T]) =
-        optional match {
+      implicit def toOption[T](optional: Optional[T]): Option[T] =
+        optional match
           case Value(v) => Some(v)
           case NoValue => None
-        }
 
-      implicit def fromOption[T](option: Option[T]) =
-        option match {
-          case Some(v) => Value(v)
-          case None => NoValue
-        }
-    }
+      given [T]: Conversion[Option[T], Optional[T]] =
+        case Some(v) => Value(v)
+        case None => NoValue
 
-    sealed trait Optional[+T] {
+    sealed trait Optional[+T]:
       def toOption = Optional.toOption(this)
-    }
+
     case class Value[T](v: T) extends Optional[T]
     case object NoValue extends Optional[Nothing]
 
@@ -480,7 +476,6 @@ trait DSL {
         case s: Soldier => s.copy(location = l(s.location))
       }
 
-  }
 
   sealed trait AgentGenerator
 

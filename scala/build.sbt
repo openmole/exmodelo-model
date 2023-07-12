@@ -1,19 +1,19 @@
 
 
-val rxVersion = "0.4.2"
-val scalatagsVersion = "0.9.1"
-val scalaJSdomVersion = "1.0.0"
-val scaladgetVersion = "1.3.7"
+//val rxVersion = "0.4.2"
+val scalatagsVersion = "0.12.0"
+val scalaJSdomVersion = "2.6.0"
+val scaladgetVersion = "1.10.0"
 
 
 def globalSettings = Seq(
-  scalaVersion := "2.13.6"
+  scalaVersion := "3.3.0"
 )
 
 name := "zombies"
 
 lazy val ode = Project("ode", file("ode")) enablePlugins(SbtOsgi) settings (globalSettings: _*) settings (
-  libraryDependencies += "com.github.pathikrit" %% "better-files" % "3.9.1",
+  libraryDependencies += "com.github.pathikrit" %% "better-files" % "3.9.2",
   OsgiKeys.exportPackage := Seq("zombies.ode.*;-split-package:=merge-first"),
   OsgiKeys.importPackage := Seq("*;resolution:=optional"),
   OsgiKeys.privatePackage := Seq("!scala.*,!java.*,!META-INF.*.RSA,!META-INF.*.SF,!META-INF.*.DSA,META-INF.services.*,META-INF.*,*"),
@@ -43,13 +43,13 @@ lazy val console = Project("console", file("console")) dependsOn (bundle) settin
 lazy val buildGUI = taskKey[Unit]("buildGUI")
 
 lazy val guiDependencies = Seq(
-  libraryDependencies += "com.lihaoyi" %%% "scalatags" % scalatagsVersion,
+  //libraryDependencies += "com.lihaoyi" %%% "scalatags" % scalatagsVersion,
   libraryDependencies += "org.scala-js" %%% "scalajs-dom" % scalaJSdomVersion,
-  libraryDependencies += "com.lihaoyi" %%% "scalarx" % rxVersion,
+  //libraryDependencies += "com.lihaoyi" %%% "scalarx" % rxVersion cross CrossVersion.for3Use2_13,
   libraryDependencies += "org.openmole.scaladget" %%% "svg" % scaladgetVersion,
   libraryDependencies += "org.openmole.scaladget" %%% "bootstrapnative" % scaladgetVersion,
-  libraryDependencies += "org.openmole.scaladget" %%% "bootstrapslider" % scaladgetVersion,
-  libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.3",
+  libraryDependencies += "org.openmole.scaladget" %%% "nouislider" % scaladgetVersion,
+  //libraryDependencies += "com.chuusai" %%% "shapeless" % "3.3.0",
 )
 
 def guiBuilder(demoTarget: File, demoResource: File, jsBuild: File, dependencyJS: File, depsCSS: File, globalCSS: File) = {
