@@ -1,9 +1,13 @@
 
 
 //val rxVersion = "0.4.2"
-val scalatagsVersion = "0.12.0"
-val scalaJSdomVersion = "2.6.0"
-val scaladgetVersion = "1.10.0"
+//val scalatagsVersion = "0.12.0"
+//val scalaJSdomVersion = "2.6.0"
+//val scaladgetVersion = "1.10.0"
+val rxVersion = "0.4.2"
+val scalatagsVersion = "0.9.1"
+val scalaJSdomVersion = "1.0.0"
+val scaladgetVersion = "1.3.7"
 
 
 def globalSettings = Seq(
@@ -45,10 +49,13 @@ lazy val buildGUI = taskKey[Unit]("buildGUI")
 lazy val guiDependencies = Seq(
   //libraryDependencies += "com.lihaoyi" %%% "scalatags" % scalatagsVersion,
   libraryDependencies += "org.scala-js" %%% "scalajs-dom" % scalaJSdomVersion,
-  //libraryDependencies += "com.lihaoyi" %%% "scalarx" % rxVersion cross CrossVersion.for3Use2_13,
+  libraryDependencies += "com.lihaoyi" %%% "scalarx" % rxVersion cross CrossVersion.for3Use2_13,
   libraryDependencies += "org.openmole.scaladget" %%% "svg" % scaladgetVersion,
   libraryDependencies += "org.openmole.scaladget" %%% "bootstrapnative" % scaladgetVersion,
-  libraryDependencies += "org.openmole.scaladget" %%% "nouislider" % scaladgetVersion,
+  libraryDependencies += "org.openmole.scaladget" %%% "bootstrapslider" % scaladgetVersion,
+  libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.3",
+
+  //libraryDependencies += "org.openmole.scaladget" %%% "nouislider" % scaladgetVersion,
   //libraryDependencies += "com.chuusai" %%% "shapeless" % "3.3.0",
 )
 
@@ -60,24 +67,35 @@ def guiBuilder(demoTarget: File, demoResource: File, jsBuild: File, dependencyJS
   IO.copyDirectory(demoResource, demoTarget)
 }
 
+def guiSettings = Seq(
+  scalaVersion := "2.13.11",
+  scalacOptions += "-Ytasty-reader"
+)
+
 lazy val guiUtils = Project("guiUtils", file("guiUtils")) dependsOn (model) enablePlugins (ExecNpmPlugin) settings (globalSettings: _*) settings (
+  guiSettings,
   guiDependencies)
 
 lazy val zombieland = Project("zombieland", file("zombieland")) dependsOn (guiUtils) enablePlugins (ExecNpmPlugin) settings (globalSettings: _*) settings (
+  guiSettings,
   buildGUI := guiBuilder(target.value, (resourceDirectory in Compile).value, (fullOptJS in Compile).value.data, dependencyFile.value, cssFile.value, (resourceDirectory in guiUtils in Compile).value / "css"))
 
 lazy val cooperation = Project("cooperation", file("cooperation")) dependsOn (guiUtils) enablePlugins(ExecNpmPlugin) settings (globalSettings: _*) settings(
+  guiSettings,
   buildGUI := guiBuilder(target.value, (resourceDirectory in Compile).value, (fullOptJS in Compile).value.data, dependencyFile.value, cssFile.value, (resourceDirectory in guiUtils in Compile).value / "css")
 )
 
 lazy val cooperationandarmy = Project("cooperationandarmy", file("cooperationandarmy")) dependsOn (guiUtils) enablePlugins(ExecNpmPlugin) settings (globalSettings: _*) settings(
+  guiSettings,
   buildGUI := guiBuilder(target.value, (resourceDirectory in Compile).value, (fullOptJS in Compile).value.data, dependencyFile.value, cssFile.value, (resourceDirectory in guiUtils in Compile).value / "css")
 )
 
 lazy val spatialsens = Project("spatialsens", file("spatialsens")) dependsOn (guiUtils) enablePlugins(ExecNpmPlugin) settings (globalSettings: _*) settings(
+  guiSettings,
   buildGUI := guiBuilder(target.value, (resourceDirectory in Compile).value, (fullOptJS in Compile).value.data, dependencyFile.value, cssFile.value, (resourceDirectory in guiUtils in Compile).value / "css")
 )
 
 lazy val apiGUI = Project("apigui", file("apigui")) dependsOn (guiUtils) enablePlugins(ExecNpmPlugin) settings (globalSettings: _*) settings(
+  guiSettings,
   buildGUI := guiBuilder(target.value, (resourceDirectory in Compile).value, (fullOptJS in Compile).value.data, dependencyFile.value, cssFile.value, (resourceDirectory in guiUtils in Compile).value / "css")
 )
