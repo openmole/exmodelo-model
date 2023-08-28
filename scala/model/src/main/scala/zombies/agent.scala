@@ -9,7 +9,7 @@ import zombies.agent.Antidote.activated
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
 
-object agent {
+object agent:
 
   sealed trait Agent
   case class Human(position: Position, velocity: Velocity, metabolism: Metabolism, relativePerception: Double, maxRotation: Double, followRunningProbability: Double, fight: Fight, rescue: Rescue, canLeave: Boolean, antidote: AntidoteMechanism, function: Human.Function) extends Agent
@@ -26,11 +26,10 @@ object agent {
   sealed trait AntidoteMechanism
   case object NoAntidote extends AntidoteMechanism
 
-  object Antidote {
+  object Antidote:
     def activated(antidote: Antidote) = antidote.taken && antidote.activationDelay <= 0
     def activate(antidote: Antidote) = antidote.copy(taken = true)
     def immunityLoss(antidote: Antidote) = NoAntidote
-  }
 
   case class Antidote(activationDelay: Int, efficiencyProbability: Double, vaccinatedExhaustionProbability: Option[Double], immunityLossProbability: Double, taken: Boolean = false) extends AntidoteMechanism
 
@@ -105,15 +104,14 @@ object agent {
       space.neighbors(Index.get(index, _, _), x, y, neighborhoodSize).filter(n => distance(Agent.position(n), Agent.position(agent)) < range)
     }
 
-    def neighbors(index: Index[Agent], agent: Agent, range: Double, neighborhood: NeighborhoodCache): Array[Agent] =
+    def neighbors(index: Index[Agent], agent: Agent, range: Double, neighborhood: WorldCache): Array[Agent] =
       around(Agent.position(agent), range, index, neighborhood)
 
-    def around(position: Position, range: Double, index: Index[Agent], neighborhood: NeighborhoodCache): Array[Agent] = {
+    def around(position: Position, range: Double, index: Index[Agent], neighborhood: WorldCache): Array[Agent] =
       val (x, y) = positionToLocation(position, index.side)
-      neighborhood(x)(y).
+      neighborhood.cache(x)(y).
         flatMap { case(x, y) => Index.get(index, x, y) }.
         filter(n => distance(Agent.position(n), position) < range)
-    }
 
     def projectedVelocities(granularity: Int, maxRotation: Double, velocity: Velocity, speed: Double) =
       (-granularity to granularity).map(_ * maxRotation).map(r => normalize(rotate(velocity, r), speed))
@@ -254,47 +252,38 @@ object agent {
           (0 until enter).map(_ => human)
         }
 
-       case class Parameter(entranceLocation: Location, world: World, index: Index[Agent], neighborhoodCache: NeighborhoodCache, simulation: Simulation, step: Int, agents: Seq[Agent], random: Random)
+       case class Parameter(entranceLocation: Location, world: World, index: Index[Agent], neighborhoodCache: WorldCache, simulation: Simulation, step: Int, agents: Seq[Agent], random: Random)
     }
 
     type EntranceLaw = EntranceLaw.Parameter => Seq[Agent]
 
-    def joining(world: World, index: Index[Agent], neighborhoodCache: NeighborhoodCache, simulation: Simulation, step: Int, agents: Seq[Agent], random: Random) = {
+    def joining(world: World, index: Index[Agent], neighborhoodCache: WorldCache, simulation: Simulation, step: Int, agents: Seq[Agent], random: Random) =
 
-      val join =
-        for {
-          x <- 0 until world.side
-          y <- 0 until world.side
-          c = world.cells(x)(y)
-        } yield c match {
-          case c: Floor =>
-            c.entrance match {
-              case HumanEntrance =>
-                val p = EntranceLaw.Parameter((x, y), world, index, neighborhoodCache, simulation, step, agents, random)
-                simulation.entranceLaw(p)
-              case _ => Seq()
-            }
-          case _ => Seq()
-        }
+      def join =
+        for
+          (e, (x, y)) <- neighborhoodCache.entrances
+        yield
+          e match
+            case HumanEntrance =>
+              val p = EntranceLaw.Parameter((x, y), world, index, neighborhoodCache, simulation, step, agents, random)
+              simulation.entranceLaw(p)
+            case _ => Seq()
 
       join.flatten
-    }
 
 
     def metabolism(rng: Random)(a: Agent) =
-      a match  {
+      a match
         case human: Human => Human.metabolism(human, rng)
         case a => a
-      }
 
-    def inform(neighbors: Array[Agent], world: World, rng: Random)(a: Agent) = {
-      def lookForInformation(h: Human) = {
+    def inform(neighbors: Array[Agent], world: World, rng: Random)(a: Agent) =
+      def lookForInformation(h: Human) =
         val (x, y) = positionToLocation(h.position, world.side)
         World.get(world, x, y) match {
           case Some(floor: Floor) => if(rng.nextDouble() < floor.information) h.copy(rescue = h.rescue.copy(informed = true)) else h
           case _ => h
         }
-      }
 
       a match {
         case human: Human if !Human.isInformed(human) && human.rescue.alerted =>
@@ -304,7 +293,6 @@ object agent {
         case human: Human => lookForInformation(human)
         case a => a
       }
-    }
 
     def alert(neighbors: Array[Agent], rng: Random)(a: Agent) =
       a match {
@@ -378,20 +366,18 @@ object agent {
       }
 
     def releasePheromone(agents: Index[Agent], world: World, pheromoneMechanism: PheromoneMechanism) =
-      pheromoneMechanism match {
+      pheromoneMechanism match
         case Pheromone(evaporation) =>
           val newCells =
-            Array.tabulate[Cell] (world.side, world.side) { (x, y) =>
-              val pursuingZombies = agents.cells (x) (y).collect (Agent.zombie).count (_.pursuing)
-              val cell = world.cells (x) (y)
-              cell match {
+            Array.tabulate[Cell] (world.side, world.side): (x, y) =>
+              val pursuingZombies = (agents.cells(x)(y)).collect (Agent.zombie).count(_.pursuing)
+              val cell = world.cells(x)(y)
+              cell match
                 case f: Floor => f.copy (pheromone = math.max (f.pheromone + pursuingZombies - evaporation, 0.0) )
                 case c => c
-              }
-            }
+
           world.copy (cells = newCells)
         case NoPheromone => world
-      }
 
 
     def fight(world: World, index: Index[Agent], agents: Vector[Agent], infectionRange: Double, zombify: (Zombie, Human) => Zombie, rng: Random) = {
@@ -667,4 +653,3 @@ object agent {
     def speed(z: Zombie) = if(z.pursuing) z.relativeRunSpeed else z.walkSpeed
 
   }
-}

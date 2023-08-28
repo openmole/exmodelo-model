@@ -2,7 +2,9 @@ package zombies.console
 
 import zombies.simulation.{Event, Simulation, environment, physic}
 import zombies.world.World
-import zombies._
+import zombies.*
+import zombies.Console.EventCount
+
 import scala.util.Random
 
 object Test extends App {
@@ -23,14 +25,23 @@ object Test extends App {
     random = rng
   )
 
-  def display(simulation: Simulation, events: Vector[Event], allEvents: List[Event]) = {
-    print(Console.display(simulation, allEvents))
+  var count = EventCount(0, 0, 0)
+
+  def display(step: Int, simulation: Simulation, events: Vector[Event]) = ()
+    print(Console.display(step, simulation, count))
     Thread.sleep(100)
     Console.clear(simulation)
-    allEvents ++ events
-  }
+    count =
+      EventCount(
+        rescued = count.rescued + events.collect(Event.rescued).size,
+        killed = count.rescued + events.collect(Event.killed).size,
+        zombified = count.rescued + events.collect(Event.zombified).size,
+      )
 
-  Simulation.simulate(simulation, rng, 5000, display, List())
+  Simulation.simulate(simulation, rng, 5000, display)
+
+  //Simulation.simulateBlind(simulation, rng, 500)
+
 
   //println(_root_.zombies.simulation.simulate(simulation, rng, 500).humansDynamic(1).size)
  // println(_root_.zombies.simulation.simulate(simulation, rng, 500).humansDynamic(1).size)

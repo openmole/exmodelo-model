@@ -7,7 +7,7 @@ import scala.util.Random
 import scala.scalajs.js.annotation._
 
 @JSExportTopLevel("world")
-object world {
+object world:
 
   sealed trait Cell
 
@@ -38,9 +38,8 @@ object world {
   case object HumanEntrance extends Entrance
 
   object World {
-    def floor: PartialFunction[Cell, Floor] = {
+    def floor: PartialFunction[Cell, Floor] =
       case floor: Floor => floor
-    }
 
     def get(world: World, l: Location): Option[Cell] = {
       val (x, y) = l
@@ -213,26 +212,20 @@ object world {
 
     def pheromone(world: World, location: Location): Double = {
       val (x, y) = location
-      World.get(world, x, y) match {
+      World.get(world, x, y) match
         case Some(f: Floor) => f.pheromone
         case _=> 0.0
-      }
     }
 
     def minCellSide(world: World) = 1.0 / world.side
     def cellDiagonal(world: World) = space.cellDiagonal(world.side)
 
-    def visibleNeighborhoodCache(world: World, range: Double): NeighborhoodCache = {
-      val neighborhoodSize = math.ceil(range / space.cellSide(world.side)).toInt
-      def visible(location: Location) = shadow.visible(location, World.isWall(world, _, _), (world.side, world.side), neighborhoodSize)
-      Array.tabulate(world.side, world.side) { (x, y) => if(isWall(world, x, y)) Array.empty else visible(x, y).toArray }
-    }
 
-    def randomPosition(world: World, rng: Random): Position = {
+
+    def randomPosition(world: World, rng: Random): Position =
       val v = randomUnitVector(rng)
       val p = positionToLocation(v, world.side)
       if(World.isWall(world, p._1, p._2)) randomPosition(world, rng) else v
-    }
 
     def jaude = parse() {
       """+++++++00000+++++++++++0000+++++++++++++
@@ -338,7 +331,7 @@ object world {
 
 
     /* ------------- Traps ------------- */
-    def setTraps(world: World, trapLocation: Seq[(Location, Trap)]): World = {
+    def setTraps(world: World, trapLocation: Seq[(Location, Trap)]): World =
       val cells = copyCells(world.cells)
 
       for {
@@ -351,7 +344,7 @@ object world {
       }
 
       world.copy(cells = cells)
-    }
+
 
 
     def setTrap(world: World, trapLocation: Location*): World = setTraps(world, trapLocation.map(_ -> CaptureTrap))
@@ -360,8 +353,32 @@ object world {
 
   case class World(cells: Array[Array[Cell]], side: Int)
 
-  type NeighborhoodCache = Array[Array[Array[(Int, Int)]]]
+  object WorldCache:
+    def compute(world: World, range: Double): WorldCache =
+      val neighborhoodSize = math.ceil(range / space.cellSide(world.side)).toInt
+
+      def visible(location: Location) = shadow.visible(location, World.isWall(world, _, _), (world.side, world.side), neighborhoodSize)
+
+      def entrances =
+        for
+          x <- 0 until world.side
+          y <- 0 until world.side
+          c = world.cells(x)(y)
+        yield
+          c match
+            case c: Floor if c.entrance != NoEntrance => Some(c.entrance -> (x, y))
+            case _ => None
+
+      WorldCache(
+        cache = Array.tabulate(world.side, world.side): (x, y) =>
+          if World.isWall(world, x, y)
+          then Array.empty
+          else visible(x, y).toArray,
+        entrances = entrances.flatten.toArray
+      )
+
+  case class WorldCache(
+    cache: Array[Array[Array[(Int, Int)]]],
+    entrances: Array[(Entrance, (Int, Int))])
 
 
-
-}

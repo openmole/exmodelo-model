@@ -68,7 +68,7 @@ trait DSL {
     redCross: RedCrossOption = NoRedCross,
     agents: Seq[AgentGenerator] = Seq(),
     steps: Int = 500,
-    random: scala.util.Random) = {
+    random: scala.util.Random) =
 
     val state = initialize(
       world = world,
@@ -97,7 +97,6 @@ trait DSL {
       random = random)
 
     Simulation.simulate(state, random, steps)
-  }
 
   def initialize(
     world: World = quarantine,

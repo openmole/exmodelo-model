@@ -9,7 +9,7 @@ import scala.math._
 import org.apache.commons.math3.stat.regression.SimpleRegression
 import org.locationtech.jts.geom._
 
-object metrics {
+object metrics:
 
   def cumSum(v: Seq[Int]) =
     v.foldLeft(List(0)) { (acc, el)=> (el + acc.head) :: acc  }.reverse.toVector
@@ -88,18 +88,16 @@ object metrics {
   }
 
   def rescuedDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.rescued)
-  def filteredRescuedDynamic(results: SimulationResult, runSpeed: Option[Double => Boolean], informProbability: Option[Double => Boolean], by: Int = defaultGroupSize) = {
-    val (simulation, events) = results
-    val cellSide = space.cellSide(simulation.head.world.side)
-    def filter(h: agent.Human) = {
+  def filteredRescuedDynamic(results: SimulationResult, runSpeed: Option[Double => Boolean], informProbability: Option[Double => Boolean], by: Int = defaultGroupSize) =
+    val cellSide = space.cellSide(results.simulations.head.world.side)
+    def filter(h: agent.Human) =
       val r = runSpeed.map(f => f(h.metabolism.relativeRunSpeed / cellSide)).getOrElse(true)
       val i = informProbability.map(f => f(h.rescue.informProbability)).getOrElse(true)
       r && i
-    }
 
-    Array(events.head.collect(Event.rescued).filter(e => filter(e.human)).size) ++
-      events.tail.map(_.collect(Event.rescued).filter(e => filter(e.human)).size).grouped(by).map(_.sum)
-  }
+    Array(results.events.head.collect(Event.rescued).filter(e => filter(e.human)).size) ++
+      results.events.tail.map(_.collect(Event.rescued).filter(e => filter(e.human)).size).grouped(by).map(_.sum)
+
   def killedDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.killed)
   def zombifiedDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.zombified)
   def fleeDynamic(results: SimulationResult, by: Int = defaultGroupSize) = eventDynamic(results, by, Event.flee)
@@ -136,48 +134,37 @@ object metrics {
   def totalAntidoteActivated(results: SimulationResult) = totalEvents(results, Event.antidoteActivated)
   def totalImmunityLoss(results: SimulationResult) = totalEvents(results, Event.immunityLoss)
 
-  private def agentsDynamic(results : SimulationResult, by: Int, e: PartialFunction[Agent, Any]) = {
-    val (simulations, _) = results
-    simulations.take(1).map(_.agents.collect(e).size).toArray ++ simulations.tail.map(_.agents.collect(e).size).grouped(by).map(_.last)
-  }
+  private def agentsDynamic(results : SimulationResult, by: Int, e: PartialFunction[Agent, Any]) =
+    results.simulations.take(1).map(_.agents.collect(e).size).toArray ++ results.simulations.tail.map(_.agents.collect(e).size).grouped(by).map(_.last)
 
-  private def eventDynamic(results: SimulationResult, by: Int, e: PartialFunction[Event, Any]) = {
-    val (_, events) = results
-    Array(events.head.collect(e).size) ++ events.tail.map(_.collect(e).size).grouped(by).map(_.sum)
-  }
+  private def eventDynamic(results: SimulationResult, by: Int, e: PartialFunction[Event, Any]) =
+    Array(results.events.head.collect(e).size) ++ results.events.tail.map(_.collect(e).size).grouped(by).map(_.sum)
 
-  private def accumulatedEventDynamic(results: SimulationResult, e: PartialFunction[Event, Any]) = {
-    val (_, events) = results
-    cumSum(events.map(_.collect(e)).map(_.size)).toArray
-  }
+  private def accumulatedEventDynamic(results: SimulationResult, e: PartialFunction[Event, Any]) =
+    cumSum(results.events.map(_.collect(e)).map(_.size).toSeq).toArray
 
-  private def totalEvents(results: SimulationResult, e: PartialFunction[Event, Any]) = {
-    val (_, events) = results
-    events.map(_.collect(e).size).sum
-  }
 
-  private def halfTimeEvents(results: SimulationResult, e: PartialFunction[Event, Any]) = {
-    val (_, events) = results
-    val rescuedCum = cumSum(events.map(_.collect(e)).map(_.size))
+  private def totalEvents(results: SimulationResult, e: PartialFunction[Event, Any]) =
+    results.events.map(_.collect(e).size).sum
+
+  private def halfTimeEvents(results: SimulationResult, e: PartialFunction[Event, Any]) =
+    val rescuedCum = cumSum(results.events.map(_.collect(e)).map(_.size).toSeq)
     val rescued = rescuedCum.last
     val half = rescued / 2
     rescuedCum.indexWhere(c => c >= half)
-  }
 
   /** Return the step where number rescued is maximum over @window simulation steps */
-  private def peakTimeEvents(results: SimulationResult, window: Int, e: PartialFunction[Event, Any]) = {
+  private def peakTimeEvents(results: SimulationResult, window: Int, e: PartialFunction[Event, Any]) =
     val dyn = eventDynamic(results, 1, e).sliding(window).map(_.sum).toVector
     val maxRescued = dyn.max
     dyn.indexWhere(_ == maxRescued) + window / 2
-  }
 
   /** Return the step where number rescued is maximum over @window simulation steps */
-  private def peakSizeEvents(results: SimulationResult, window: Int, e: PartialFunction[Event, Any]): Int = {
+  private def peakSizeEvents(results: SimulationResult, window: Int, e: PartialFunction[Event, Any]): Int =
     val dyn = eventDynamic(results, 1, e).sliding(window).map(_.sum).toVector
     val maxRescued = dyn.max
     val peak = math.min(math.max(0, dyn.indexWhere(_ == maxRescued) + window / 2), dyn.size - 1)
     dyn(peak)
-  }
 
 
   implicit class ComposePartial[A, B](pf: PartialFunction[A, B]) {
@@ -186,15 +173,9 @@ object metrics {
   }
 
 
-  object SpatStat {
-
-
-    private def agentsLocations(results : SimulationResult, by: Int, e: PartialFunction[Agent, Any]): List[Vector[(Int,Int)]] = {
-      val (simulations, _) = results
-      //simulations.take(1).map(_.agents.collect(e).size).toArray ++ simulations.tail.map(_.agents.collect(e).size).grouped(by).map(_.last)
-      simulations.map(_.agents.collect(e).map{a => Agent.location(a.asInstanceOf[Agent],simulations.head.world.side)})
-    }
-
+  object SpatStat:
+    private def agentsLocations(results : SimulationResult, by: Int, e: PartialFunction[Agent, Any]): Iterable[Vector[(Int,Int)]] =
+      results.simulations.map(_.agents.collect(e).map{a => Agent.location(a.asInstanceOf[Agent], results.simulations.head.world.side)})
 
     def slope(matrix: Array[Array[Double]]): Double = slope(matrix.flatten)
 
@@ -254,8 +235,6 @@ object metrics {
     def convexHullArea(pi: Array[(Double,Double)]): Double = convexHullPoints(pi).getArea
 
 
-  }
 
 
 
-}

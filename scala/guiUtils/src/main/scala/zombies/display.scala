@@ -12,7 +12,7 @@ import scala.scalajs.js.annotation._
 import scala.util.Random
 import scaladget.bootstrapnative.bsn._
 import zombies.simulation.{Event, RedCross, Simulation}
-import zombies.world.{CaptureTrap, DeathTrap, Floor, NeighborhoodCache, NoEntrance, Wall, World}
+import zombies.world.{CaptureTrap, DeathTrap, Floor, WorldCache, NoEntrance, Wall, World}
 import rx._
 import scaladget.svg.path._
 import scaladget.tools._
@@ -91,8 +91,8 @@ object display {
     val doorSize = 2
     val wallSize = (side - doorSize) / 2
 
-    val stepBuffer: Var[Option[(Simulation, List[Event], Int, NeighborhoodCache)]] = Var(None)
-    val stepState: Var[Option[(Simulation, List[Event], Int, NeighborhoodCache)]] = Var(None)
+    val stepBuffer: Var[Option[(Simulation, List[Event], Int, WorldCache)]] = Var(None)
+    val stepState: Var[Option[(Simulation, List[Event], Int, WorldCache)]] = Var(None)
 
     val timeOut: Var[Option[Int]] = Var(None)
     val people: Var[People] = Var(People())
@@ -221,7 +221,7 @@ object display {
     val setupButton = button("Setup", btn_default, onclick := { () =>
       val simulation = initFunction()
       val stepNumber = 0
-      val neighborhoodCache = World.visibleNeighborhoodCache(simulation.world, math.max(simulation.relativeHumanPerception, simulation.relativeZombiePerception))
+      val neighborhoodCache = WorldCache.compute(simulation.world, math.max(simulation.relativeHumanPerception, simulation.relativeZombiePerception))
 
       stepBuffer.update(Some(simulation, List(), stepNumber, neighborhoodCache))
       stepState.update(Some(simulation, List(), stepNumber, neighborhoodCache))
