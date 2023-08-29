@@ -16,7 +16,6 @@ object Test extends App {
 
   val rng = new Random(42)
 
-  val world = World.jaude
   val simulation = api.initialize(
     environment.stadium,
     humans = humans,
@@ -39,9 +38,9 @@ object Test extends App {
         zombified = count.rescued + events.collect(Event.zombified).size,
       )
 
-  //Simulation.listenSimulation(simulation, rng, 5000, display)
+  Simulation.listenSimulation(simulation, rng, 5000, display)
 
-  Simulation.simulateBlind(simulation, rng, 5000)
+  //Simulation.simulateBlind(simulation, rng, 5000)
 
 
   //println(_root_.zombies.simulation.simulate(simulation, rng, 500).humansDynamic(1).size)
