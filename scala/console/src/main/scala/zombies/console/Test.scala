@@ -1,7 +1,7 @@
 package zombies.console
 
 import zombies.simulation.{Event, Simulation, environment, physic}
-import zombies.world.World
+import zombies.world.{Neighborhood, World}
 import zombies.*
 import zombies.Console.EventCount
 
@@ -22,12 +22,13 @@ object Test extends App {
     humans = humans,
     zombies = zombies,
     walkSpeed = walkSpeed,
-    random = rng
+    random = rng,
+    neighborhood = Neighborhood.All
   )
 
   var count = EventCount(0, 0, 0)
 
-  def display(step: Int, simulation: Simulation, events: Vector[Event]) = ()
+  def display(step: Int, simulation: Simulation, events: Vector[Event]) = 
     print(Console.display(step, simulation, count))
     Thread.sleep(100)
     Console.clear(simulation)
@@ -38,9 +39,9 @@ object Test extends App {
         zombified = count.rescued + events.collect(Event.zombified).size,
       )
 
-  Simulation.simulate(simulation, rng, 5000, display)
+  //Simulation.listenSimulation(simulation, rng, 5000, display)
 
-  //Simulation.simulateBlind(simulation, rng, 500)
+  Simulation.simulateBlind(simulation, rng, 5000)
 
 
   //println(_root_.zombies.simulation.simulate(simulation, rng, 500).humansDynamic(1).size)

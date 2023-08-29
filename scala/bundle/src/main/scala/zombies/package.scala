@@ -3,9 +3,9 @@ import zombies.metrics.defaultGroupSize
 import zombies.simulation._
 import zombies.world.World
 
-package object zombies extends DSL {
+package object zombies extends DSL:
 
-  implicit class ResultDecorator(results: SimulationResult) {
+  implicit class ResultDecorator(results: SimulationResult):
     def humansDynamic(by: Int = defaultGroupSize) = metrics.humansDynamic(results, by)
     def walkingHumansDynamic(by: Int = defaultGroupSize) = metrics.walkingHumansDynamic(results, by)
     def runningHumansDynamic(by: Int = defaultGroupSize) = metrics.runningHumansDynamic(results, by)
@@ -50,7 +50,6 @@ package object zombies extends DSL {
     def spatialEntropyZombified: Double = metrics.spatialEntropy(metrics.zombified)(results)
     def spatialSlopeZombified: Double = metrics.spatialSlope(metrics.zombified)(results)
     def spatialRipleyZombified: Double = metrics.spatialRipley(metrics.zombified)(results)
-  }
 
 
-}
+

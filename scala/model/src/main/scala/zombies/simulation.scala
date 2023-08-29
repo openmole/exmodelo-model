@@ -8,53 +8,41 @@ import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
 
-object simulation {
+object simulation:
 
-  object Event {
-    def rescued : PartialFunction[Event, Rescued] = {
+  object Event:
+    def rescued : PartialFunction[Event, Rescued] =
       case e: Rescued => e
-    }
 
-    def zombified: PartialFunction[Event, Zombified] = {
+    def zombified: PartialFunction[Event, Zombified] =
       case e: Zombified => e
-    }
 
-    def killed: PartialFunction[Event, Killed] = {
+    def killed: PartialFunction[Event, Killed] =
       case e: Killed => e
-    }
 
-    def gone: PartialFunction[Event, Gone] = {
+    def gone: PartialFunction[Event, Gone] =
       case e: Gone => e
-    }
 
-    def humanGone: PartialFunction[Event, Gone] = {
+    def humanGone: PartialFunction[Event, Gone] =
       case g@Gone(_: Human) => g
-    }
 
-    def zombieGone: PartialFunction[Event, Gone] = {
+    def zombieGone: PartialFunction[Event, Gone] =
       case g@Gone(_: Zombie) => g
-    }
 
-    def flee: PartialFunction[Event, FleeZombie] = {
+    def flee: PartialFunction[Event, FleeZombie] =
       case e: FleeZombie => e
-    }
 
-    def pursue: PartialFunction[Event, PursueHuman] = {
+    def pursue: PartialFunction[Event, PursueHuman] =
       case e: PursueHuman => e
-    }
 
-    def trapped: PartialFunction[Event, Trapped] = {
+    def trapped: PartialFunction[Event, Trapped] =
       case e: Trapped => e
-    }
 
-    def antidoteActivated: PartialFunction[Event, AntidoteActivated] = {
+    def antidoteActivated: PartialFunction[Event, AntidoteActivated] =
       case e: AntidoteActivated => e
-    }
 
-    def immunityLoss: PartialFunction[Event, ImmunityLoss] = {
+    def immunityLoss: PartialFunction[Event, ImmunityLoss] =
       case e: ImmunityLoss => e
-    }
-  }
 
   sealed trait Event
   case class Zombified(human: Human) extends Event
@@ -104,14 +92,14 @@ object simulation {
 
   object Simulation:
 
-    def step(step: Int, simulation: Simulation, neighborhoodCache: WorldCache, rng: Random) =
+    def step(step: Int, simulation: Simulation, worldCache: WorldCache, rng: Random) =
       val index = Agent.index(simulation.agents, simulation.world.side)
       val w1 = Agent.releasePheromone(index, simulation.world, simulation.zombiePheromone)
       val (ai, infected, died) = Agent.fight(w1, index, simulation.agents, simulation.relativeInfectionRange, Agent.zombify(_, _), rng)
 
       val (na1, moveEvents) =
         ai.map { a0 =>
-          val ns = Agent.neighbors(index, a0, Agent.perception(a0), neighborhoodCache)
+          val ns = Agent.neighbors(index, a0, Agent.perception(a0), worldCache)
 
           val evolve =
             Agent.inform(ns, w1, rng) _ andThen
@@ -136,7 +124,7 @@ object simulation {
 
       val (na2, rescued) = Agent.rescue(w1, na1.flatten)
 
-      val newAgents = Agent.joining(w1, index, neighborhoodCache, simulation, step, na2, rng)
+      val newAgents = Agent.joining(w1, index, worldCache, simulation, step, na2, rng)
 
       val events =
         infected.map(i => Zombified(i)) ++
@@ -148,7 +136,7 @@ object simulation {
 
 
     def simulateBlind(simulation: Simulation, rng: Random, steps: Int) =
-      val neighborhoodCache = WorldCache.compute(simulation.world, math.max(simulation.relativeHumanPerception, simulation.relativeZombiePerception))
+      val neighborhoodCache = WorldCache.compute(simulation.world, simulation.neighborhood, math.max(simulation.relativeHumanPerception, simulation.relativeZombiePerception))
 
       def run0(s: Int, simulation: Simulation): Unit =
         if s == 0
@@ -159,7 +147,7 @@ object simulation {
 
       run0(steps, simulation)
 
-    def simulate(simulation: Simulation, rng: Random, steps: Int): SimulationResult =
+    def simulate(simulation: Simulation, rng: Random, steps: Int, cache: Option[WorldCache] = None): SimulationResult =
       val allSimulations = new collection.mutable.ArrayBuffer[Simulation](steps)
       val allEvents = new collection.mutable.ArrayBuffer[Vector[Event]](steps)
 
@@ -167,11 +155,13 @@ object simulation {
         allSimulations.append(s)
         allEvents.append(events)
 
-      simulate(simulation, rng, steps, result)
+      listenSimulation(simulation, rng, steps, result)
       SimulationResult(allSimulations, allEvents)
 
-    def simulate[ACC](simulation: Simulation, rng: Random, steps: Int, accumulate: (Int, Simulation, Vector[Event]) => Unit): Unit =
-      val neighborhoodCache = WorldCache.compute(simulation.world, math.max(simulation.relativeHumanPerception, simulation.relativeZombiePerception))
+    def listenSimulation[ACC](simulation: Simulation, rng: Random, steps: Int, stepListener: (Int, Simulation, Vector[Event]) => Unit, cache: Option[WorldCache] = None): Unit =
+      val worldCache =
+        cache.getOrElse:
+          WorldCache.compute(simulation.world, simulation.neighborhood, math.max(simulation.relativeHumanPerception, simulation.relativeZombiePerception))
 
       @tailrec def run0(s: Int, simulation: Simulation, events: Vector[Event], r: (Int, Simulation, Vector[Event]) => Unit): Unit =
         val currentStep = steps - s
@@ -179,10 +169,10 @@ object simulation {
         then r(currentStep, simulation, events)
         else
           r(currentStep, simulation, events)
-          val (newSimulation, newEvents) = step(currentStep, simulation, neighborhoodCache, rng)
+          val (newSimulation, newEvents) = step(currentStep, simulation, worldCache, rng)
           run0(s - 1, newSimulation, newEvents, r)
 
-      run0(steps, simulation, Vector.empty, accumulate)
+      run0(steps, simulation, Vector.empty, stepListener)
 
 
   case class Simulation(
@@ -204,7 +194,8 @@ object simulation {
     walkSpeedParameter: Double,
     zombiePheromone: PheromoneMechanism,
     rotationGranularity: Int,
-    entranceLaw: EntranceLaw):
+    entranceLaw: EntranceLaw,
+    neighborhood: Neighborhood = Neighborhood.Visible):
       def cellSide = space.cellSide(world.side)
       def relativeInfectionRange = infectionRange * cellSide
       def relativeHumanPerception = humanPerception * cellSide
@@ -219,7 +210,7 @@ object simulation {
     def quarantine = world.World.quarantineStadium(15, 15)
     def square = world.World.square(15)
 
-  object physic {
+  object physic:
     /* General parameters */
     val walkSpeed = 0.1
     val infectionRange = 0.32
@@ -243,6 +234,3 @@ object simulation {
 
     /* Additional parameters */
     val entranceLambda = 0.1
-  }
-
-}

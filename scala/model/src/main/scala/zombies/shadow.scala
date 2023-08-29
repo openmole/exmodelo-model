@@ -4,33 +4,31 @@ package zombies
 /**
   * Created by reyman on 14/06/16.
   */
-object shadow {
+object shadow:
 
   def visible(position: (Int, Int), isOpaque: (Int, Int) => Boolean, side: (Int, Int), maxRows: Int) =
     (0 until 8).map(o => visibleOctant(position, o, isOpaque, side, maxRows)).foldLeft(Set.empty[(Int, Int)]) { case (a, b) => a ++ b }
 
-  def visibleOctant(position: (Int, Int), octant:Int, isOpaque: (Int, Int) => Boolean, side: (Int, Int), maxRows:Int) = {
+  def visibleOctant(position: (Int, Int), octant:Int, isOpaque: (Int, Int) => Boolean, side: (Int, Int), maxRows:Int) =
     case class ShadowLine (shadows: Vector[Shadow] = Vector.empty)
     case class Shadow (start: Double, end: Double)
 
     def projectTile(row: Double, col: Double) = Shadow(col / (row + 2), (col + 1) / (row + 1))
-    def isInShadow(line: ShadowLine, projection: Shadow): Boolean = {
+
+    def isInShadow(line: ShadowLine, projection: Shadow): Boolean =
       def shadowContains(s: Shadow, projection: Shadow):Boolean = (s.start <= projection.start) && (s.end >= projection.end)
       line.shadows.exists { s => shadowContains(s, projection) }
-    }
 
-    def addShadow(shadowToTest: Shadow, shadowLine: ShadowLine): ShadowLine = {
+    def addShadow(shadowToTest: Shadow, shadowLine: ShadowLine): ShadowLine =
       val i =
-        shadowLine.shadows.indexWhere { s =>
-          s.start >= shadowToTest.start} match {
+        shadowLine.shadows.indexWhere { s => s.start >= shadowToTest.start } match
           case -1 => if (shadowLine.shadows.nonEmpty) shadowLine.shadows.size else 0
           case x => x
-        }
 
       def overlappingPrevious = i > 0 && shadowLine.shadows(i - 1).end > shadowToTest.start
       def overlappingNext = i < shadowLine.shadows.length && shadowLine.shadows(i).start < shadowToTest.end
 
-      (overlappingPrevious, overlappingNext) match {
+      (overlappingPrevious, overlappingNext) match
         case (true, true) =>
           val mergedLine = shadowLine.shadows(i - 1).copy(end = shadowLine.shadows(i).end)
           shadowLine.copy(shadows = shadowLine.shadows.patch(i - 1, Seq(mergedLine), 2))
@@ -44,10 +42,6 @@ object shadow {
           shadowLine.copy(shadows = shadowLine.shadows.patch(i - 1, Seq(newPrevious), 1))
         case(false, false) =>
           shadowLine.copy(shadows = shadowLine.shadows.patch(i, Seq(shadowToTest), 0))
-      }
-
-    }
-
 
 
     def contains(point: (Int, Int), pos: (Int, Int), size: (Int, Int)) =
@@ -96,7 +90,4 @@ object shadow {
       }
 
     computeRows(1, ShadowLine(), List())
-  }
 
-
-}

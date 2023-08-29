@@ -8,6 +8,8 @@ import scala.scalajs.js.annotation._
 
 @JSExportTopLevel("world")
 object world:
+  enum Neighborhood:
+    case Visible, All
 
   sealed trait Cell
 
@@ -28,10 +30,8 @@ object world:
 
   case class Slope(x: Double = 0.0, y: Double = 0.0, intensity: Double = 0)
 
-  object Floor {
+  object Floor:
     def trapZone(f: Floor) = f.trap.isDefined
-  }
-
 
   sealed trait Entrance
   case object NoEntrance extends Entrance
@@ -354,10 +354,23 @@ object world:
   case class World(cells: Array[Array[Cell]], side: Int)
 
   object WorldCache:
-    def compute(world: World, range: Double): WorldCache =
+    def compute(world: World, neighborhood: Neighborhood, range: Double): WorldCache =
       val neighborhoodSize = math.ceil(range / space.cellSide(world.side)).toInt
 
-      def visible(location: Location) = shadow.visible(location, World.isWall(world, _, _), (world.side, world.side), neighborhoodSize)
+      def visible(location: Location) =
+        neighborhood match
+          case Neighborhood.Visible =>
+            shadow.visible(location, World.isWall(world, _, _), (world.side, world.side), neighborhoodSize).toArray
+          case Neighborhood.All =>
+            val nb =
+              for
+                dx <- -neighborhoodSize to neighborhoodSize
+                dy <- -neighborhoodSize to neighborhoodSize
+                (x, y) = location
+                (nx, ny) = (x + dx, y + dy)
+                if World.locationIsInTheWorld(world, nx, ny) && !World.isWall(world, nx, ny)
+              yield (nx, ny)
+            nb.toArray
 
       def entrances =
         for
@@ -373,7 +386,7 @@ object world:
         cache = Array.tabulate(world.side, world.side): (x, y) =>
           if World.isWall(world, x, y)
           then Array.empty
-          else visible(x, y).toArray,
+          else visible(x, y),
         entrances = entrances.flatten.toArray
       )
 

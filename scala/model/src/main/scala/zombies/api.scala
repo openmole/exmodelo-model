@@ -4,7 +4,7 @@ import zombies.agent.Agent
 import zombies.agent.Agent.{EntranceLaw, looseImmunity, zombie}
 import zombies.simulation.{ArmyOption, NoArmy, NoRedCross, RedCrossOption}
 import zombies.space.{Location, Position}
-import zombies.world.World
+import zombies.world.{Neighborhood, World}
 
 import scala.util.Random
 
@@ -25,7 +25,7 @@ import scala.util.Random
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-trait DSL {
+trait DSL:
 
   type Location = zombies.space.Location
 
@@ -122,10 +122,10 @@ trait DSL {
     army: ArmyOption = NoArmy,
     redCross: RedCrossOption = NoRedCross,
     agents: Seq[AgentGenerator] = Seq(),
-    random: scala.util.Random) = {
-
-
-    def generateHuman = {
+    neighborhood: Neighborhood = Neighborhood.Visible,
+    random: scala.util.Random) = 
+    
+    def generateHuman =
       import _root_.zombies.agent._
 
       val informed = random.nextDouble() < humanInformedRatio
@@ -143,9 +143,8 @@ trait DSL {
         canLeave = true,
         function = _root_.zombies.agent.Human.Civilian,
         rng = random)
-    }
 
-    def generateSoldier(army: Army) = {
+    def generateSoldier(army: Army) =
       import _root_.zombies.agent._
       val rescue = Rescue(informed = true, alerted = true, informProbability = army.informProbability)
       _root_.zombies.agent.Human(
@@ -161,15 +160,13 @@ trait DSL {
         canLeave = false,
         function = _root_.zombies.agent.Human.Army,
         rng = random)
-    }
 
     def soldiers =
-      army match {
+      army match
         case NoArmy => Vector.empty
         case a: Army => Vector.fill(a.size)(generateSoldier(a))
-      }
 
-    def generateZombie = {
+    def generateZombie =
       _root_.zombies.agent.Zombie(
         world = world,
         walkSpeedParameter = walkSpeed,
@@ -178,9 +175,8 @@ trait DSL {
         maxRotation = zombieMaxRotation,
         canLeave = zombieCanLeave,
         random = random)
-    }
 
-    def generateRedCrossVolunteers(redCross: RedCross) = {
+    def generateRedCrossVolunteers(redCross: RedCross) =
       import _root_.zombies.agent._
 
       val informed = random.nextDouble() < redCross.informedRatio
@@ -202,17 +198,14 @@ trait DSL {
         antidote = antidote,
         function = _root_.zombies.agent.Human.RedCross,
         rng = random)
-    }
 
     def redCrossVolunteers =
-      redCross match {
+      redCross match
         case NoRedCross => Vector.empty
         case a: RedCross => Vector.fill(a.size)(generateRedCrossVolunteers(a))
-      }
-
 
     val generatedAgents =
-      agents.flatMap { a =>
+      agents.flatMap: a =>
         AgentGenerator.generateAgent(
           a,
           humanRunSpeed = humanRunSpeed,
@@ -231,7 +224,6 @@ trait DSL {
           walkSpeed = walkSpeed,
           random = random
         )
-      }
 
     val allAgents =
       Vector.fill(humans)(generateHuman) ++
@@ -259,9 +251,9 @@ trait DSL {
       walkSpeedParameter = walkSpeed,
       zombiePheromone = _root_.zombies.agent.Pheromone(zombiePheromoneEvaporation),
       rotationGranularity = rotationGranularity,
-      entranceLaw = entrance
+      entranceLaw = entrance,
+      neighborhood = neighborhood
     )
-  }
 
   type Army = simulation.Army
   type RedCross = simulation.RedCross
@@ -571,6 +563,5 @@ trait DSL {
 
 
 
-}
 
 object api extends DSL

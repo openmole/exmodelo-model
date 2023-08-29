@@ -31,7 +31,14 @@ lazy val model = Project("model", file("model")) enablePlugins(ScalaJSPlugin) se
 lazy val bundle = Project("zombies-bundle", file("bundle")) enablePlugins(SbtOsgi) settings (globalSettings: _*) settings(
   libraryDependencies += "org.apache.commons" % "commons-math3" % "3.6.1",
   libraryDependencies += "org.locationtech.jts" % "jts-core" % "1.16.1",
-  OsgiKeys.exportPackage := Seq("zombies.*;-split-package:=merge-first"),
+//  libraryDependencies ++=
+//    Seq(
+//      "io.circe" %% "circe-core",
+//      "io.circe" %% "circe-generic",
+//      "io.circe" %% "circe-parser").map(_ % "0.14.5"),
+  // https://mvnrepository.com/artifact/com.thoughtworks.xstream/xstream
+  libraryDependencies += "com.thoughtworks.xstream" % "xstream" % "1.4.20",
+    OsgiKeys.exportPackage := Seq("zombies.*;-split-package:=merge-first"),
   OsgiKeys.importPackage := Seq("*;resolution:=optional"),
   OsgiKeys.privatePackage := Seq("!scala.*,!java.*,!monocle.*,!META-INF.*.RSA,!META-INF.*.SF,!META-INF.*.DSA,META-INF.services.*,META-INF.*,*"),
   OsgiKeys.requireCapability := """osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"""",
