@@ -36,6 +36,8 @@ trait DSL:
   type Simulation = zombies.simulation.Simulation
   val Simulation = zombies.simulation.Simulation
 
+  val Neighborhood = zombies.world.Neighborhood
+
   def physic = zombies.simulation.physic
 
   def stadium = simulation.environment.stadium
@@ -68,6 +70,7 @@ trait DSL:
     redCross: RedCrossOption = NoRedCross,
     agents: Seq[AgentGenerator] = Seq(),
     steps: Int = 500,
+    neighborhood: Neighborhood = Neighborhood.Visible,
     random: scala.util.Random) =
 
     val state = initialize(
@@ -94,6 +97,7 @@ trait DSL:
       army = army,
       redCross = redCross,
       agents = agents,
+      neighborhood = neighborhood,
       random = random)
 
     Simulation.simulate(state, random, steps)
