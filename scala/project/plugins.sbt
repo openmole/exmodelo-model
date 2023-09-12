@@ -1,5 +1,5 @@
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.6")
+addSbtPlugin("org.openmole" % "sbt-osgi" % "0.9.9")
 
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.13.2")
 
