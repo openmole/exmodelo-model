@@ -1,21 +1,25 @@
 library(dplyr)
+library(readr)
 library(ggplot2)
 
-setwd(paste0(Sys.getenv('CS_HOME'),'/OpenMole/zombies/openmole/sensitivity'))
+source(paste0(Sys.getenv('CS_HOME'),'/Organisation/Models/Utils/R/plots.R'))
+
+setwd(paste0(Sys.getenv('CS_HOME'),'/OpenMole-all/exmodelo-model/openmole/old/sensitivity'))
 
 #resprefix = '20190612_151834_GRID_SLURM' # NO PARAMETERS IN THIS FILE !
 #resprefix='20190612_103602_LHS_SLURM' # this neither !
 #resprefix='20190622_045352_GRID_GRID'
-resprefix='20190623_133610_GRID_GRID'
+#resprefix='20190623_133610_GRID_GRID'
 #resprefix='20190623_134607_GRID_GRID'
+resprefix='20231110_exploration'
 
-res <- as.tbl(read.csv(paste0('exploration/',resprefix,'.csv')))
+res <-read_csv(paste0('exploration/',resprefix,'.csv'))
 resdir=paste0('results/',resprefix,'/');dir.create(resdir)
 
 # non ts indicators
-indicators=c("halfZombified","peakSize","peakTime","totalZombified",
-             "spatialMoranZombified","spatialSlopeZombified","spatialDistanceMeanZombified",
-             "spatialEntropyZombified")
+#indicators=c("halfZombified","peakSize","peakTime","totalZombified", "spatialMoranZombified","spatialSlopeZombified","spatialDistanceMeanZombified", "spatialEntropyZombified")
+indicators=c("peakSize","peakTime","totalZombified", "totalRescued")
+
 
 parameters = list(p1="humanFollowProbability",p2="humanInformProbability",p3="humanInformedRatio")
 #parameters = list(p1="humanExhaustionProbability",p2="humanPerception",p3="humanRunSpeed")
@@ -39,18 +43,20 @@ ntres=res
 #            )
 
 # variability
-sres = ntres %>% group_by(id,
+# adapted for reduced res: 20231110_exploration
+sres = ntres %>% group_by(#id,
                           humanFollowProbability,humanInformProbability,humanInformedRatio
                           #humanExhaustionProbability,humanPerception,humanRunSpeed
                           ) %>% 
-  summarize(halfZombifiedSd=sd(halfZombified),halfZombified=mean(halfZombified),halfZombifiedSharpe=halfZombified/halfZombifiedSd,
+  summarise(#halfZombifiedSd=sd(halfZombified),halfZombified=mean(halfZombified),halfZombifiedSharpe=halfZombified/halfZombifiedSd,
             peakSizeSd=sd(peakSize),peakSize=mean(peakSize),peakSizeSharpe=peakSize/peakSizeSd,
             peakTimeSd=sd(peakTime),peakTime=mean(peakTime),peakTimeSHarpe=peakTime/peakTimeSd,
             totalZombifiedSd=sd(totalZombified),totalZombified=mean(totalZombified),totalZombifiedSharpe=totalZombified/totalZombifiedSd,
-            spatialMoranZombifiedSd=sd(spatialMoranZombified),spatialMoranZombified=mean(spatialMoranZombified),spatialMoranZombifiedSharpe=spatialMoranZombified/spatialMoranZombifiedSd,
-            spatialSlopeZombifiedSd=sd(spatialSlopeZombified),spatialSlopeZombified=mean(spatialSlopeZombified),spatialSlopeZombifiedSharpe=spatialSlopeZombified/spatialSlopeZombifiedSd,
-            spatialDistanceMeanZombifiedSd=sd(spatialDistanceMeanZombified),spatialDistanceMeanZombified=mean(spatialDistanceMeanZombified),spatialDistanceMeanZombifiedSharpe=spatialDistanceMeanZombified/spatialDistanceMeanZombifiedSd,
-            spatialEntropyZombifiedSd=sd(spatialEntropyZombified),spatialEntropyZombified=mean(spatialEntropyZombified),spatialEntropyZombifiedSharpe=spatialEntropyZombified/spatialEntropyZombifiedSd
+            #spatialMoranZombifiedSd=sd(spatialMoranZombified),spatialMoranZombified=mean(spatialMoranZombified),spatialMoranZombifiedSharpe=spatialMoranZombified/spatialMoranZombifiedSd,
+            #spatialSlopeZombifiedSd=sd(spatialSlopeZombified),spatialSlopeZombified=mean(spatialSlopeZombified),spatialSlopeZombifiedSharpe=spatialSlopeZombified/spatialSlopeZombifiedSd,
+            #spatialDistanceMeanZombifiedSd=sd(spatialDistanceMeanZombified),spatialDistanceMeanZombified=mean(spatialDistanceMeanZombified),spatialDistanceMeanZombifiedSharpe=spatialDistanceMeanZombified/spatialDistanceMeanZombifiedSd,
+            #spatialEntropyZombifiedSd=sd(spatialEntropyZombified),spatialEntropyZombified=mean(spatialEntropyZombified),spatialEntropyZombifiedSharpe=spatialEntropyZombified/spatialEntropyZombifiedSd
+            totalRescuedSd=sd(totalZombified),totalRescued=mean(totalZombified),totalRescuedSharpe=totalRescued/totalRescuedSd,
             )
 summary(sres)
 
