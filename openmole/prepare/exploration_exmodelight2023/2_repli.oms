@@ -1,0 +1,45 @@
+val seed = Val[Long]
+
+val totalRescued = Val[Double]
+val totalZombified = Val[Double]
+val peakTime = Val[Double]
+val peakSize = Val[Int]
+
+val zombifiedMed = Val[Double]
+val zombifiedAvg = Val[Double]
+
+val zombieModel = ScalaTask("""
+  import zombies._
+
+  val rng = Random(seed)
+
+  val result = zombieInvasion(
+    zombies = 4,
+    humans = 250,
+    steps = 500,
+    random = rng,
+    humanFollowProbability = 1.0,
+    humanInformedRatio = 0.5,
+    humanInformProbability = 0.5 
+  )
+
+  val totalRescued = result.totalRescued
+  val totalZombified = result.totalZombified
+  val peakTime = result.peakTimeZombified(window = 5)
+  val peakSize = result.peakSizeZombified(window = 5)"""
+) set (
+  (inputs, outputs) += (seed),
+  outputs += (totalRescued, totalZombified, peakTime, peakSize),
+  plugins += pluginsOf[zombies.agent.Agent]
+)
+
+Replication(
+  evaluation = (zombieModel hook (workDirectory / "results" / "replications.csv")),
+  seed = seed,
+  sample = 20,
+  aggregation = Seq(
+      totalZombified evaluate "totalZombified.median" as zombifiedMed,
+      totalZombified evaluate "totalZombified.average" as zombifiedAvg
+    )
+) hook (workDirectory / "results" / "aggregated.csv")
+

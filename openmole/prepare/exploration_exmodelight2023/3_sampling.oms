@@ -1,0 +1,77 @@
+val seed = Val[Long]
+
+val humanFollowProbability = Val[Double]
+val humanInformedRatio = Val[Double]
+val humanInformProbability = Val[Double]
+
+val totalRescued = Val[Double]
+val totalZombified = Val[Double]
+val peakTime = Val[Double]
+val peakSize = Val[Int]
+
+val zombieModel = ScalaTask("""
+  import zombies._
+
+  val rng = Random(seed)
+
+  val result = zombieInvasion(
+    zombies = 4,
+    humans = 250,
+    steps = 500,
+    random = rng,
+    humanFollowProbability = humanFollowProbability,
+    humanInformedRatio = humanInformedRatio,
+    humanInformProbability = humanInformProbability 
+  )
+
+  val totalRescued = result.totalRescued
+  val totalZombified = result.totalZombified
+  val peakTime = result.peakTimeZombified(window = 5)
+  val peakSize = result.peakSizeZombified(window = 5)"""
+) set (
+  (inputs, outputs) += (seed, humanFollowProbability, humanInformedRatio, humanInformProbability),
+  outputs += (totalRescued, totalZombified, peakTime, peakSize),
+  plugins += pluginsOf[zombies.agent.Agent]
+)
+
+
+DirectSampling(
+  evaluation = Replication(
+      evaluation = (zombieModel on LocalEnvironment(8)),
+      seed = seed,
+      sample = 100
+    ),
+  sampling =
+   (humanFollowProbability in (0.0 to 1.0 by 0.2)) x
+   (humanInformedRatio in (0.0 to 1.0 by 0.2)) x
+   (humanInformProbability in (0.0 to 1.0 by 0.2))
+) hook (workDirectory / "results" / "exploration.csv")
+
+
+// Other samplings
+
+// One factor at a time
+/*
+OneFactorSampling(
+    (x1 in (0.0 to 1.0 by 0.2)) nominal 0.5,
+    (x2 in (0.0 to 1.0 by 0.2)) nominal 0.5
+*/
+
+// LHS
+/*LHS(
+      sample = 100,
+      factor = Seq(x1 in (0.0,1.0),
+        x2 in (0.0,1.0)
+      )
+    ) */
+    
+// Sobol
+/*
+SobolSampling(
+      sample = 100,
+      factor = Seq(x1 in (0.0,1.0),
+        x2 in (0.0,1.0)
+      )
+    )
+*/
+    

@@ -1,0 +1,33 @@
+// OpenMOLE prototypes: model inputs and outputs
+val seed = Val[Long]
+
+val rescuedDynamic = Val[Array[Int]]
+val zombiesDynamic = Val[Array[Int]]
+
+// model execution Task
+val zombieModel = ScalaTask("""
+  import zombies._
+  
+  val rng = Random(seed)
+
+  val result = 
+    zombieInvasion(
+      zombies = 4,
+      humans = 250,
+      steps = 500,
+      random = rng,
+      humanFollowProbability = 1.0,
+      humanInformedRatio = 0.5,
+      humanInformProbability = 0.5 
+    )
+
+  val zombiesDynamic = result.zombiesDynamic(20)
+  val rescuedDynamic = result.rescuedDynamic(20)"""
+) set (
+  inputs += (seed),
+  outputs += (rescuedDynamic, zombiesDynamic),
+  plugins += pluginsOf[zombies.agent.Agent],
+  seed := 42 // setup a fixed value for inputs
+)
+
+zombieModel hook (workDirectory / "results" / "dynamic.csv")
