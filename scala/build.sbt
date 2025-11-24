@@ -11,7 +11,7 @@ val scaladgetVersion = "1.3.7"
 
 
 def globalSettings = Seq(
-  scalaVersion := "3.3.0"
+  scalaVersion := "3.3.4"
 )
 
 name := "zombies"
