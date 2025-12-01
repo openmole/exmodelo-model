@@ -21,7 +21,7 @@ val zombieModel = ScalaTask("""
     random = rng,
     humanFollowProbability = humanFollowProbability,
     humanInformedRatio = humanInformedRatio,
-    humanInformProbability = humanInformProbability 
+    humanInformProbability = humanInformProbability
   )
 
   val totalRescued = result.totalRescued
@@ -30,8 +30,7 @@ val zombieModel = ScalaTask("""
   val peakSize = result.peakSizeZombified(window = 5)"""
 ) set (
   (inputs, outputs) += (seed, humanFollowProbability, humanInformedRatio, humanInformProbability),
-  outputs += (totalRescued, totalZombified, peakTime, peakSize),
-  plugins += pluginsOf[zombies.agent.Agent]
+  outputs += (totalRescued, totalZombified, peakTime, peakSize)
 )
 
 
@@ -45,7 +44,7 @@ DirectSampling(
    (humanFollowProbability in (0.0 to 1.0 by 0.2)) x
    (humanInformedRatio in (0.0 to 1.0 by 0.2)) x
    (humanInformProbability in (0.0 to 1.0 by 0.2))
-) hook (workDirectory / "results" / "exploration.csv")
+) hook (workDirectory / "results" / "exploration")
 
 
 // Other samplings
@@ -64,7 +63,7 @@ OneFactorSampling(
         x2 in (0.0,1.0)
       )
     ) */
-    
+
 // Sobol
 /*
 SobolSampling(
@@ -74,4 +73,3 @@ SobolSampling(
       )
     )
 */
-    
