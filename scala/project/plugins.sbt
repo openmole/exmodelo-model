@@ -1,7 +1,7 @@
 
-addSbtPlugin("org.openmole" % "sbt-osgi" % "0.9.9")
+addSbtPlugin("com.github.sbt" % "sbt-osgi" % "0.11.0-RC1")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.13.2")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.22.0")
 
 addSbtPlugin("org.openmole" % "scalajs-execnpm" % "0.10")
 
