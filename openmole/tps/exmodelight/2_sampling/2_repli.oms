@@ -20,7 +20,7 @@ val zombieModel = ScalaTask("""
     random = rng,
     humanFollowProbability = 1.0,
     humanInformedRatio = 0.5,
-    humanInformProbability = 0.5 
+    humanInformProbability = 0.5
   )
 
   val totalRescued = result.totalRescued
@@ -29,17 +29,15 @@ val zombieModel = ScalaTask("""
   val peakSize = result.peakSizeZombified(window = 5)"""
 ) set (
   (inputs, outputs) += (seed),
-  outputs += (totalRescued, totalZombified, peakTime, peakSize),
-  plugins += pluginsOf[zombies.agent.Agent]
+  outputs += (totalRescued, totalZombified, peakTime, peakSize), // scalar outputs
 )
 
 Replication(
-  evaluation = (zombieModel hook (workDirectory / "results" / "replications.csv")),
+  evaluation = (zombieModel hook (workDirectory / "results" / "replications")), // result at the single run level
   seed = seed,
   sample = 20,
   aggregation = Seq(
       totalZombified evaluate "totalZombified.median" as zombifiedMed,
       totalZombified evaluate "totalZombified.average" as zombifiedAvg
     )
-) hook (workDirectory / "results" / "aggregated.csv")
-
+) hook (workDirectory / "results" / "aggregated") // aggregated results

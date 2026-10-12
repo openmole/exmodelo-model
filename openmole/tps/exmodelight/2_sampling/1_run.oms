@@ -4,13 +4,15 @@ val seed = Val[Long]
 val rescuedDynamic = Val[Array[Int]]
 val zombiesDynamic = Val[Array[Int]]
 
-// model execution Task
+// Model execution task with a ScalaTask: constructor needs only scala code to be run
+// you have access to the zombies package and functions within because the model plugin `zombies-bundle_3-0.1.0-SNAPSHOT.jar`
+// was plugged
 val zombieModel = ScalaTask("""
   import zombies._
-  
+
   val rng = Random(seed)
 
-  val result = 
+  val result =
     zombieInvasion(
       zombies = 4,
       humans = 250,
@@ -18,16 +20,15 @@ val zombieModel = ScalaTask("""
       random = rng,
       humanFollowProbability = 1.0,
       humanInformedRatio = 0.5,
-      humanInformProbability = 0.5 
+      humanInformProbability = 0.5
     )
 
   val zombiesDynamic = result.zombiesDynamic(20)
   val rescuedDynamic = result.rescuedDynamic(20)"""
 ) set (
-  inputs += (seed),
-  outputs += (rescuedDynamic, zombiesDynamic),
-  plugins += pluginsOf[zombies.agent.Agent],
-  seed := 42 // setup a fixed value for inputs
+  inputs += (seed), // specify input variables
+  outputs += (rescuedDynamic, zombiesDynamic), // specify output variables
+  seed := 42 // setup a fixed value for inputs with the ":=" operator
 )
 
-zombieModel hook (workDirectory / "results" / "dynamic.csv")
+zombieModel hook (workDirectory / "results" / "modelDynamics") // the hook here gives the output file in which results are stored
